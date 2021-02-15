@@ -32,6 +32,7 @@ public class DNSClient {
         System.out.println("Server: " + address);
         System.out.println("Request type: " + query_type);
         executeRequest(1);
+
     }
 
     /**
