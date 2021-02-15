@@ -1,9 +1,9 @@
 package dns;
 
+import jdk.nashorn.internal.runtime.regexp.joni.exception.ValueException;
+
 import java.net.*;
-import java.util.Arrays;
-import java.util.List;
-import java.util.ListIterator;
+import java.util.*;
 
 public class DNSClient {
 
@@ -20,8 +20,7 @@ public class DNSClient {
      * @param args
      */
     public DNSClient(String[] args) {
-
-
+        this.parseCommandArguments(args);
     }
 
     /**
@@ -47,9 +46,21 @@ public class DNSClient {
         }
 
 
-        try {  // execute request
+        try {
+            DatagramSocket clientSocket = new DatagramSocket();
 
-            // UDP socket, request, response
+            InetAddress ipAddress = new InetAddress.getByAddress(server);
+
+            byte[] sendData = new byte[1024];
+            byte[] receiveData = new byte[1024];
+
+            sendData = name.getBytes();
+
+            DatagramPacket clientPacket = new DatagramPacket(sendData, sendData.length, ipAddress, port);
+            DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
+
+            clientSocket.send(clientPacket);
+            clientSocket.receive(receivePacket);
 
 
         } catch (SocketException e) {
@@ -68,13 +79,42 @@ public class DNSClient {
     }
 
 
-    private void parseCommandLineArguments(String[] args) {
-        List<String> argsList = Arrays.asList(args);
-        ListIterator<String> iterator = argsList.listIterator();
+    private void parseCommandArguments(String[] args) {
+        for (int i = 0; i < args.length; i++) {
+            String arg = args[i];
+            switch (arg) {
+                case "-t":
+                    int seconds = Integer.parseInt(args[++i]);
+                    timeout = seconds * 1000;
+                    break;
+                case "-r":
+                    MAX_RETRIES = Integer.parseInt(args[++i]);
+                    break;
+                case "-p":
+                    port = Integer.parseInt(args[++i]);
+                    break;
+                case "-mx":
+                    query_type = QueryType.MX;
+                    break;
+                case "-ns":
+                    query_type = QueryType.NS;
+                    break;
+                default:
+                    if (arg.contains("@")) {
+                        String addr = arg.replaceFirst("@", "");
+                        String[] tokens = addr.split("\\.");
 
-        while (iterator.hasNext()) {
-
-
+                        for (String token: tokens) {
+                            int ipComponent = Integer.parseInt(token);
+                            if (ipComponent > 255 || ipComponent < 0) {
+                                throw new ValueException("Ip token invalid (not between 0 and 255).");
+                            }
+                            server[i] = (byte) ipComponent;
+                        }
+                        name = args[++i];
+                    }
+                    break;
+            }
         }
 
     }
