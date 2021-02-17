@@ -1,7 +1,7 @@
 import java.nio.ByteBuffer;
 import java.util.Random;
 
-public class DNSRequest {
+public class DnsRequest {
 
     private String domain;
     private QueryType qtype;
@@ -13,7 +13,7 @@ public class DNSRequest {
      * @param domain
      * @param qtype
      */
-    public DNSRequest(String domain, QueryType qtype) {
+    public DnsRequest(String domain, QueryType qtype) {
         this.domain = domain;
         this.qtype = qtype;
     }

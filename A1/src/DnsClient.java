@@ -1,7 +1,7 @@
 import jdk.nashorn.internal.runtime.regexp.joni.exception.ValueException;
 import java.net.*;
 
-public class DNSClient {
+public class DnsClient {
 
     public QueryType qtype = QueryType.A;
     private int timeout = 5000;
@@ -15,7 +15,7 @@ public class DNSClient {
      * DNSClient constructor
      * @param args
      */
-    public DNSClient(String[] args) {
+    public DnsClient(String[] args) {
         this.parseCommandArguments(args);
     }
 
@@ -63,7 +63,7 @@ public class DNSClient {
             // Show elapsed time for receiving response
             System.out.println("Response received after " + (ended - started)/1000. + " seconds " + "(" + (retries - 1) + " retries)");
     
-            DNSResponse res = new DNSResponse(receivePacket.getData(), sendData.length, qtype);
+            DnsResponse res = new DnsResponse(receivePacket.getData(), sendData.length, qtype);
             res.outputResponse();
 
         } catch (SocketException e) {

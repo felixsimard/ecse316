@@ -1,4 +1,4 @@
-public class DNSRecord {
+public class DnsRecord {
 
     private int ttl, rd_length, max_preference;
     private String name, domain;
@@ -7,7 +7,7 @@ public class DNSRecord {
     private boolean auth;
     private int byte_length;
 
-    public DNSRecord(boolean auth) {
+    public DnsRecord(boolean auth) {
         this.auth = auth;
     }
 
