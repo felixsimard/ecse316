@@ -22,24 +22,24 @@ public class DnsResponse {
 
         answer_records = new DnsRecord[ANCount];
         int offSet = requestSize;
-        for(int i = 0; i < ANCount; i ++){
+        for (int i = 0; i < ANCount; i++) {
             answer_records[i] = this.parseAnswer(offSet);
             offSet += answer_records[i].getByteLength();
         }
 
         //ns count even though we don't do anything
-        for(int i = 0; i < NSCount; i++){
+        for (int i = 0; i < NSCount; i++) {
             offSet += parseAnswer(offSet).getByteLength();
         }
 
         additional_records = new DnsRecord[ARCount];
-        for(int i = 0; i < ARCount; i++){
+        for (int i = 0; i < ARCount; i++) {
             additional_records[i] = this.parseAnswer(offSet);
             offSet += additional_records[i].getByteLength();
         }
         try {
             this.checkRCodeForErrors();
-        } catch(RuntimeException e){
+        } catch (RuntimeException e) {
             no_records = true;
         }
 
@@ -49,14 +49,14 @@ public class DnsResponse {
 
     public void outputResponse() {
         System.out.println();
-        if (this.ANCount <= 0  || no_records) {
+        if (this.ANCount <= 0 || no_records) {
             System.out.println("NOTFOUND");
             return;
         }
 
         System.out.println("***Answer Section (" + this.ANCount + " answerRecords)***");
 
-        for (DnsRecord record : answer_records){
+        for (DnsRecord record : answer_records) {
             record.outputRecord();
         }
 
@@ -64,7 +64,7 @@ public class DnsResponse {
 
         if (this.ARCount > 0) {
             System.out.println("***Additional Section (" + this.ARCount + " answerRecords)***");
-            for (DnsRecord record : additional_records){
+            for (DnsRecord record : additional_records) {
                 record.outputRecord();
             }
         }
@@ -72,7 +72,7 @@ public class DnsResponse {
 
 
     private void checkRCodeForErrors() {
-        switch( this.RCode) {
+        switch (this.RCode) {
             case 0:
                 //No error
                 break;
@@ -90,7 +90,7 @@ public class DnsResponse {
     }
 
 
-    private void parseHeader(){
+    private void parseHeader() {
         //ID
         byte[] id = new byte[2];
         id[0] = response[0];
@@ -116,27 +116,27 @@ public class DnsResponse {
         this.RCode = response[3] & 0x0F;
 
         //QDCount
-        byte[] QDCount = { response[4], response[5] };
+        byte[] QDCount = {response[4], response[5]};
         ByteBuffer wrapped = ByteBuffer.wrap(QDCount);
         this.QDCount = wrapped.getShort();
 
         //ANCount
-        byte[] ANCount = { response[6], response[7] };
+        byte[] ANCount = {response[6], response[7]};
         wrapped = ByteBuffer.wrap(ANCount);
         this.ANCount = wrapped.getShort();
 
         //NSCount
-        byte[] NSCount = { response[8], response[9] };
+        byte[] NSCount = {response[8], response[9]};
         wrapped = ByteBuffer.wrap(NSCount);
         this.NSCount = wrapped.getShort();
 
         //ARCount
-        byte[] ARCount = { response[10], response[11] };
+        byte[] ARCount = {response[10], response[11]};
         wrapped = ByteBuffer.wrap(ARCount);
         this.ARCount = wrapped.getShort();
     }
 
-    private DnsRecord parseAnswer(int index){
+    private DnsRecord parseAnswer(int index) {
         DnsRecord result = new DnsRecord(this.AA);
 
         String domain = "";
@@ -166,20 +166,20 @@ public class DnsResponse {
         }
         result.setQueryClass(ans_class);
 
-        countByte +=2;
+        countByte += 2;
         //TTL
-        byte[] TTL = { response[countByte], response[countByte + 1], response[countByte + 2], response[countByte + 3] };
+        byte[] TTL = {response[countByte], response[countByte + 1], response[countByte + 2], response[countByte + 3]};
         ByteBuffer wrapped = ByteBuffer.wrap(TTL);
         result.setTTL(wrapped.getInt());
 
-        countByte +=4;
+        countByte += 4;
         //RDLength
-        byte[] RDLength = { response[countByte], response[countByte + 1] };
+        byte[] RDLength = {response[countByte], response[countByte + 1]};
         wrapped = ByteBuffer.wrap(RDLength);
         int rdLength = wrapped.getShort();
         result.setRdLength(rdLength);
 
-        countByte +=2;
+        countByte += 2;
         switch (result.getQueryType()) {
             case A:
                 result.setDomain(parseATypeRDATA(rdLength, countByte));
@@ -202,7 +202,7 @@ public class DnsResponse {
 
     private String parseATypeRDATA(int rdLength, int countByte) {
         String address = "";
-        byte[] byteAddress= { response[countByte], response[countByte + 1], response[countByte + 2], response[countByte + 3] };
+        byte[] byteAddress = {response[countByte], response[countByte + 1], response[countByte + 2], response[countByte + 3]};
         try {
             InetAddress inetaddress = InetAddress.getByAddress(byteAddress);
             address = inetaddress.toString().substring(1);
@@ -221,7 +221,7 @@ public class DnsResponse {
     }
 
     private String parseMXTypeRDATA(int rdLength, int countByte, DnsRecord record) {
-        byte[] mxPreference= {this.response[countByte], this.response[countByte + 1]};
+        byte[] mxPreference = {this.response[countByte], this.response[countByte + 1]};
         ByteBuffer buf = ByteBuffer.wrap(mxPreference);
         record.setMaxPreference(buf.getShort());
         return getDomainFromIndex(countByte + 2).getDomain();
@@ -234,7 +234,7 @@ public class DnsResponse {
         return cname;
     }
 
-    private void validateQueryTypeIsResponse(){
+    private void validateQueryTypeIsResponse() {
         if (!this.QR) {
             throw new RuntimeException("ERROR\tInvalid response from server: Message is not a response");
         }
@@ -254,24 +254,24 @@ public class DnsResponse {
         }
     }
 
-    private rawEntry getDomainFromIndex(int index){
+    private rawEntry getDomainFromIndex(int index) {
         rawEntry result = new rawEntry();
         int wordSize = response[index];
         String domain = "";
         boolean start = true;
         int count = 0;
-        while(wordSize != 0){
-            if (!start){
+        while (wordSize != 0) {
+            if (!start) {
                 domain += ".";
             }
             if ((wordSize & 0xC0) == (int) 0xC0) {
-                byte[] offset = { (byte) (response[index] & 0x3F), response[index + 1] };
+                byte[] offset = {(byte) (response[index] & 0x3F), response[index + 1]};
                 ByteBuffer wrapped = ByteBuffer.wrap(offset);
                 domain += getDomainFromIndex(wrapped.getShort()).getDomain();
                 index += 2;
-                count +=2;
+                count += 2;
                 wordSize = 0;
-            }else{
+            } else {
                 domain += getWordFromIndex(index);
                 index += wordSize + 1;
                 count += wordSize + 1;
@@ -284,10 +284,11 @@ public class DnsResponse {
         result.setBytes(count);
         return result;
     }
-    private String getWordFromIndex(int index){
+
+    private String getWordFromIndex(int index) {
         String word = "";
         int wordSize = response[index];
-        for(int i =0; i < wordSize; i++){
+        for (int i = 0; i < wordSize; i++) {
             word += (char) response[index + i + 1];
         }
         return word;
@@ -304,10 +305,10 @@ public class DnsResponse {
             } else if (qType[1] == 2) {
                 return QueryType.NS;
             } else if (qType[1] == 15) {
-                return  QueryType.MX;
+                return QueryType.MX;
             } else if (qType[1] == 5) {
                 return QueryType.CNAME;
-            }else {
+            } else {
                 return QueryType.OTHER;
 //                throw new RuntimeException("ERROR\tUnrecognized query type in response");
             }
@@ -316,9 +317,6 @@ public class DnsResponse {
 //        	throw new RuntimeException("ERROR\tUnrecognized query type in response");
         }
     }
-
-
-
 
 
 }

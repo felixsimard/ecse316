@@ -28,7 +28,8 @@ public class DnsRequest {
         // compute query name length
         int query_name_length = getQueryNameLength();
 
-        // allocate 12 bytes for header, 5 bytes for question + answers, plus length of query domain
+        // allocate 12 bytes for header,
+        // 5 bytes for question + answers, plus length of query domain
         ByteBuffer r = ByteBuffer.allocate(query_name_length + 5 + 12);
 
         // build the request

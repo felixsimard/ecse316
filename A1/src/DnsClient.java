@@ -1,4 +1,5 @@
 import jdk.nashorn.internal.runtime.regexp.joni.exception.ValueException;
+
 import java.net.*;
 
 public class DnsClient {
@@ -13,10 +14,18 @@ public class DnsClient {
 
     /**
      * DNSClient constructor
+     *
      * @param args
      */
     public DnsClient(String[] args) {
-        this.parseCommandArguments(args);
+        try {
+            this.parseCommandArguments(args);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("ERROR\tIncorrect input syntax: Please check arguments and try again");
+        }
+        if (server == null || name == null) {
+            throw new IllegalArgumentException("ERROR\tIncorrect input syntax: Server IP and domain name must be provided.");
+        }
     }
 
     /**
@@ -31,11 +40,12 @@ public class DnsClient {
 
     /**
      * Perform the request
+     *
      * @param retries
      */
     private void executeRequest(int retries) {
 
-        if(retries > MAX_RETRIES) {
+        if (retries > MAX_RETRIES) {
             System.out.println("ERROR\tMaximum number of retries " + MAX_RETRIES + " exceeded");
             return;
         }
@@ -61,8 +71,8 @@ public class DnsClient {
             clientSocket.close();
 
             // Show elapsed time for receiving response
-            System.out.println("Response received after " + (ended - started)/1000. + " seconds " + "(" + (retries - 1) + " retries)");
-    
+            System.out.println("Response received after " + (ended - started) / 1000. + " seconds " + "(" + (retries - 1) + " retries)");
+
             DnsResponse res = new DnsResponse(receivePacket.getData(), sendData.length, qtype);
             res.outputResponse();
 
@@ -107,7 +117,7 @@ public class DnsClient {
                         String addr = arg.replaceFirst("@", "");
                         String[] tokens = addr.split("\\.");
 
-                        for (String token: tokens) {
+                        for (String token : tokens) {
                             int ipComponent = Integer.parseInt(token);
                             if (ipComponent > 255 || ipComponent < 0) {
                                 throw new ValueException("Ip token invalid (not between 0 and 255).");
