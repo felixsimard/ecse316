@@ -1,13 +1,9 @@
-package dns;
-
 import jdk.nashorn.internal.runtime.regexp.joni.exception.ValueException;
-
 import java.net.*;
-import java.util.*;
 
 public class DNSClient {
 
-    public QueryType query_type = QueryType.A;
+    public QueryType qtype = QueryType.A;
     private int timeout = 5000;
     private int MAX_RETRIES = 3;
     private byte[] server = new byte[4];
@@ -29,9 +25,8 @@ public class DNSClient {
     public void attemptRequest() {
         System.out.println("DnsClient sending request for " + name);
         System.out.println("Server: " + address);
-        System.out.println("Request type: " + query_type);
+        System.out.println("Request type: " + qtype);
         executeRequest(1);
-
     }
 
     /**
@@ -49,7 +44,7 @@ public class DNSClient {
         try {
             DatagramSocket clientSocket = new DatagramSocket();
 
-            InetAddress ipAddress = new InetAddress.getByAddress(server);
+            InetAddress ipAddress = InetAddress.getByAddress(server);
 
             byte[] sendData = new byte[1024];
             byte[] receiveData = new byte[1024];
@@ -59,9 +54,17 @@ public class DNSClient {
             DatagramPacket clientPacket = new DatagramPacket(sendData, sendData.length, ipAddress, port);
             DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 
+            long started = System.currentTimeMillis();
             clientSocket.send(clientPacket);
             clientSocket.receive(receivePacket);
+            long ended = System.currentTimeMillis();
+            clientSocket.close();
 
+            // Show elapsed time for receiving response
+            System.out.println("Response received after " + (ended - started)/1000. + " seconds " + "(" + (retries - 1) + " retries)");
+    
+            DNSResponse res = new DNSResponse(receivePacket.getData(), sendData.length, qtype);
+            res.outputResponse();
 
         } catch (SocketException e) {
             System.out.println("ERROR\tCould not create socket");
@@ -94,10 +97,10 @@ public class DNSClient {
                     port = Integer.parseInt(args[++i]);
                     break;
                 case "-mx":
-                    query_type = QueryType.MX;
+                    qtype = QueryType.MX;
                     break;
                 case "-ns":
-                    query_type = QueryType.NS;
+                    qtype = QueryType.NS;
                     break;
                 default:
                     if (arg.contains("@")) {

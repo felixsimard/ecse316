@@ -1,5 +1,3 @@
-package dns;
-
 import java.nio.ByteBuffer;
 import java.util.Random;
 

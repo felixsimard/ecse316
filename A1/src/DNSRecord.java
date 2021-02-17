@@ -1,6 +1,3 @@
-package dns;
-
-
 public class DNSRecord {
 
     private int ttl, rd_length, max_preference;

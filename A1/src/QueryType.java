@@ -1,5 +1,3 @@
-package dns;
-
 public enum QueryType {
    A,
    MX,
