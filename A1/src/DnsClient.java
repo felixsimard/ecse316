@@ -1,4 +1,3 @@
-import jdk.nashorn.internal.runtime.regexp.joni.exception.ValueException;
 
 import java.net.*;
 
@@ -59,19 +58,23 @@ public class DnsClient {
             byte[] sendData = new byte[1024];
             byte[] receiveData = new byte[1024];
 
-            sendData = name.getBytes();
+            DnsRequest request = new DnsRequest(name, qtype);
+            sendData = request.constructRequest();
 
             DatagramPacket clientPacket = new DatagramPacket(sendData, sendData.length, ipAddress, port);
             DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 
-            long started = System.currentTimeMillis();
+            long start = System.currentTimeMillis();
+            System.out.println("here1");
             clientSocket.send(clientPacket);
+            System.out.println("here2");
             clientSocket.receive(receivePacket);
-            long ended = System.currentTimeMillis();
+            System.out.println("here3");
+            long end = System.currentTimeMillis();
             clientSocket.close();
 
             // Show elapsed time for receiving response
-            System.out.println("Response received after " + (ended - started) / 1000. + " seconds " + "(" + (retries - 1) + " retries)");
+            System.out.println("Response received after " + (end - start) / 1000. + " seconds " + "[" + (retries - 1) + " retries]");
 
             DnsResponse res = new DnsResponse(receivePacket.getData(), sendData.length, qtype);
             res.outputResponse();
@@ -92,7 +95,7 @@ public class DnsClient {
     }
 
 
-    private void parseCommandArguments(String[] args) {
+    private void parseCommandArguments(String[] args) throws Exception {
         for (int i = 0; i < args.length; i++) {
             String arg = args[i];
             switch (arg) {
@@ -114,13 +117,13 @@ public class DnsClient {
                     break;
                 default:
                     if (arg.contains("@")) {
-                        String addr = arg.replaceFirst("@", "");
-                        String[] tokens = addr.split("\\.");
+                        address = arg.replaceFirst("@", "");
+                        String[] tokens = address.split("\\.");
 
                         for (String token : tokens) {
                             int ipComponent = Integer.parseInt(token);
                             if (ipComponent > 255 || ipComponent < 0) {
-                                throw new ValueException("Ip token invalid (not between 0 and 255).");
+                                throw new Exception("Ip token invalid (not between 0 and 255).");
                             }
                             server[i] = (byte) ipComponent;
                         }

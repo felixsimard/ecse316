@@ -36,6 +36,7 @@ public class DnsRequest {
         r.put(getRequestHeader());
         r.put(getQuestionHeader(query_name_length));
 
+        System.out.println(r.toString());
         return r.array();
 
     }
@@ -70,11 +71,25 @@ public class DnsRequest {
         new Random().nextBytes(randomID);
 
         // assign the bytes at each row layer of the request header
+        // ID
         header.put(randomID);
+        /*
+        QR OPCode  AA  TC  RD  RA  ZZ   RCode
+        0  0000    0   0   1   0   000  0000
+         */
+
+        // QR OPCode AA TC RD -> 0x01
         header.put((byte) 0x01);
+        // RA  ZZ   RCode -> 0x00
         header.put((byte) 0x00);
-        header.put((byte) 0x00);
-        header.put((byte) 0x01);
+        // QD Count 0x0001
+        header.put((byte) 0x0001);
+        // AN Count 0x0000
+        header.put((byte) 0x0000);
+        // NS Count 0x0000
+        header.put((byte) 0x0000);
+        // AR Count 0x0000
+        header.put((byte) 0x0000);
 
         return header.array();
     }
@@ -95,11 +110,19 @@ public class DnsRequest {
         }
 
         // Based off Primer documentation regarding the question header structure
-        // for query domain name
+        // terminate query name will zero-length octet
         q.put((byte) 0x00);
+
         // insert query type in question header
-        q.put((byte) 0x00);
-        // for query class, for internet address
+        if (qtype == QueryType.A) {
+            q.put((byte) 0x0001);
+        } else if (qtype == QueryType.NS) {
+            q.put((byte) 0x0002);
+        } else if (qtype == QueryType.MX) {
+            q.put((byte) 0x000f);
+        }
+
+        // for query class, for internet address always use 0x0001
         q.put((byte) 0x0001);
 
         return q.array();
