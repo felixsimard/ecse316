@@ -32,11 +32,14 @@ public class DnsRequest {
         // 5 bytes for question + answers, plus length of query domain
         ByteBuffer r = ByteBuffer.allocate(query_name_length + 5 + 12);
 
-        // build the request
-        r.put(getRequestHeader());
-        r.put(getQuestionHeader(query_name_length));
+        // build the request, set headers for
+        byte[] req_header = getRequestHeader();
+        r.put(req_header);
 
-        return r.array();
+        byte[] qest_header = getQuestionHeader(query_name_length);
+        r.put(qest_header);
+
+        return r.array(); // return as a byte array
     }
 
     /**
@@ -46,7 +49,7 @@ public class DnsRequest {
      */
     private int getQueryNameLength() {
         int byte_length = 0;
-        String[] toks = domain.split("\\.");
+        String[] toks = domain.split("\\."); // tokenize by period
         for (int i = 0; i < toks.length; i++) {
             byte_length += toks[i].length() + 1;
         }
