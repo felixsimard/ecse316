@@ -1,15 +1,31 @@
 
 import java.net.*;
 
+/**
+ * Class implementing the dns client that handles the UDP communication and packet creation and reception.
+ */
 public class DnsClient {
 
-    public QueryType qtype = QueryType.A;
+    public QueryType qType = QueryType.A;
     private int timeout = 5000;
-    private int MAX_RETRIES = 3;
+    private int MAXRETRIES = 3;
     private byte[] server = new byte[4];
-    String address;
+    private String address;
     private String name;
     private int port = 53;
+
+    /**
+     * Program entry point.
+     * @param args request arguments
+     */
+    public static void main(String[] args) {
+        try {
+            DnsClient c = new DnsClient(args);
+            c.executeRequest(1);
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
 
     /**
      * DNSClient constructor
@@ -28,71 +44,72 @@ public class DnsClient {
     }
 
     /**
-     * Attempt a request
-     */
-    public void attemptRequest() {
-        System.out.println("DnsClient sending request for " + name);
-        System.out.println("Server: " + address);
-        System.out.println("Request type: " + qtype);
-        executeRequest(1);
-    }
-
-    /**
-     * Perform the request
+     * Execute the request
      *
-     * @param retries
      */
-    private void executeRequest(int retries) {
+    public void executeRequest(int retries) {
+        // print request information on first try
+        if (retries == 1) {
+            String requestDescription = "DnsClient sending request for " + name + "\n" +
+                    "Server: " + address + "\n" +
+                    "Request type: " + qType + "\n";
+            System.out.println(requestDescription);
+        }
 
-        if (retries > MAX_RETRIES) {
-            System.out.println("ERROR\tMaximum number of retries " + MAX_RETRIES + " exceeded");
+        if (retries > MAXRETRIES) {
+            System.out.println("ERROR\tMaximum number of retries " + MAXRETRIES + " exceeded.");
             return;
         }
 
-
         try {
+            // Setting up socket
             DatagramSocket clientSocket = new DatagramSocket();
             clientSocket.setSoTimeout(timeout);
 
+            // Create InetAddress used by datagram packet
             InetAddress ipAddress = InetAddress.getByAddress(server);
 
-            byte[] sendData = new byte[1024];
+            // Setting up request
+            DnsRequest request = new DnsRequest(name, qType);
+            byte[] sendData = request.constructRequest();
             byte[] receiveData = new byte[1024];
 
-            DnsRequest request = new DnsRequest(name, qtype);
-            sendData = request.constructRequest();
-
+            // Setting up packets
             DatagramPacket clientPacket = new DatagramPacket(sendData, sendData.length, ipAddress, port);
             DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 
+            // measure the time taken to send and receive query
             long start = System.currentTimeMillis();
             clientSocket.send(clientPacket);
             clientSocket.receive(receivePacket);
             long end = System.currentTimeMillis();
             clientSocket.close();
 
-            // Show elapsed time for receiving response
             System.out.println("Response received after " + (end - start) / 1000. + " seconds " + "(" + (retries - 1) + " retries)");
 
-            DnsResponse res = new DnsResponse(receivePacket.getData(), sendData.length, qtype);
+            // output response information
+            DnsResponse res = new DnsResponse(receivePacket.getData(), sendData.length, qType);
             res.outputResponse();
 
         } catch (SocketException e) {
-            System.out.println("ERROR\tCould not create socket");
+            System.out.println("ERROR\tFailed to create the socket.");
         } catch (UnknownHostException e) {
-            System.out.println("ERROR\tUnknown host");
+            System.out.println("ERROR\tThe host is unknown.");
         } catch (SocketTimeoutException e) {
-            System.out.println("ERROR\tSocket Timeout");
-            System.out.println("Reattempting request...");
+            System.out.println("ERROR\tThe socket has timed out.\nRetrying request.");
             executeRequest(++retries);
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            String message = e.getMessage();
+            System.out.println("ERROR\t" + message);
         }
-
-
     }
 
-
+    /**
+     * Parse the command line arguments.
+     *
+     * @param args
+     * @throws Exception
+     */
     private void parseCommandArguments(String[] args) throws Exception {
         for (int i = 0; i < args.length; i++) {
             String arg = args[i];
@@ -102,22 +119,22 @@ public class DnsClient {
                     timeout = seconds * 1000;
                     break;
                 case "-r":
-                    MAX_RETRIES = Integer.parseInt(args[++i]);
+                    MAXRETRIES = Integer.parseInt(args[++i]);
                     break;
                 case "-p":
                     port = Integer.parseInt(args[++i]);
                     break;
                 case "-mx":
-                    qtype = QueryType.MX;
+                    qType = QueryType.MX;
                     break;
                 case "-ns":
-                    qtype = QueryType.NS;
+                    qType = QueryType.NS;
                     break;
                 default:
                     if (arg.contains("@")) {
                         address = arg.replaceFirst("@", "");
-                        String[] tokens = address.split("\\.");
 
+                        String[] tokens = address.split("\\.");
                         int j = 0;
                         for (String token : tokens) {
                             int ipComponent = Integer.parseInt(token);
@@ -131,7 +148,5 @@ public class DnsClient {
                     break;
             }
         }
-
     }
-
 }

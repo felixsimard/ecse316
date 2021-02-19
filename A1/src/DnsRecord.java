@@ -1,61 +1,53 @@
 public class DnsRecord {
 
-    private int ttl, rd_length, max_preference;
-    private String name, domain;
-    private byte[] qclass;
-    private QueryType qtype;
+    private int ttl;
+    private int rdLength;
+    private int maxPreference;
+    private String name;
+    private String domain;
+    private byte[] qClass;
+    private QueryType qType;
     private boolean auth;
-    private int byte_length;
+    private int byteLength;
 
+    /**
+     * Constructor.
+     *
+     * @param auth
+     */
     public DnsRecord(boolean auth) {
         this.auth = auth;
     }
 
+    /**
+     * Print the record depending on the query type.
+     */
     public void outputRecord() {
-        switch (this.qtype) {
-            case A:
-                this.outputATypeRecords();
-                break;
-            case NS:
-                this.outputNSTypeRecords();
-                break;
-            case MX:
-                this.outputMXTypeRecords();
-                break;
-            case CNAME:
-                this.outputCNameTypeRecords();
-                break;
-            default:
-                break;
+        String authoritative;
+        if (auth) {
+            authoritative = "auth";
+        } else {
+            authoritative = "nonauth";
+        }
+        if (qType == QueryType.A) {
+            System.out.println("IP\t" + domain + "\t" + ttl + "\t" + authoritative);
+        } else if (qType == QueryType.NS) {
+            System.out.println("NS\t" + domain + "\t" + ttl + "\t" + authoritative);
+        } else if (qType == QueryType.MX) {
+            System.out.println("MX\t" + domain + "\t" + maxPreference + "\t" + ttl + "\t" + authoritative);
+        } else if (qType == QueryType.CNAME) {
+            System.out.println("CNAME\t" + domain + "\t" + ttl + "\t" + authoritative);
         }
     }
 
-    private void outputATypeRecords() {
-        String authString = this.auth ? "auth" : "nonauth";
-        System.out.println("IP\t" + this.domain + "\t" + this.ttl + "\t" + authString);
-    }
-
-    private void outputNSTypeRecords() {
-        String authString = this.auth ? "auth" : "nonauth";
-        System.out.println("NS\t" + this.domain + "\t" + this.ttl + "\t" + authString);
-    }
-
-    private void outputMXTypeRecords() {
-        String authString = this.auth ? "auth" : "nonauth";
-        System.out.println("MX\t" + this.domain + "\t" + max_preference + "\t" + this.ttl + "\t" + authString);
-    }
-
-    private void outputCNameTypeRecords() {
-        String authString = this.auth ? "auth" : "nonauth";
-        System.out.println("CNAME\t" + this.domain + "\t" + this.ttl + "\t" + authString);
-    }
+    /* GETTERS AND SETTERS */
 
     public int getByteLength() {
-        return byte_length;
+        return byteLength;
     }
 
     public void setByteLength(int byteLength) {
-        this.byte_length = byteLength;
+        this.byteLength = byteLength;
     }
 
     public int getTTL() {
@@ -67,19 +59,19 @@ public class DnsRecord {
     }
 
     public int getRdLength() {
-        return rd_length;
+        return rdLength;
     }
 
     public void setRdLength(int rdLength) {
-        this.rd_length = rdLength;
+        this.rdLength = rdLength;
     }
 
     public int getMaxPreference() {
-        return max_preference;
+        return maxPreference;
     }
 
     public void setMaxPreference(int max_preference) {
-        this.max_preference = max_preference;
+        this.maxPreference = max_preference;
     }
 
     public String getName() {
@@ -99,19 +91,19 @@ public class DnsRecord {
     }
 
     public byte[] getQueryClass() {
-        return qclass;
+        return qClass;
     }
 
     public void setQueryClass(byte[] queryClass) {
-        this.qclass = queryClass;
+        this.qClass = queryClass;
     }
 
     public QueryType getQueryType() {
-        return qtype;
+        return qType;
     }
 
     public void setQueryType(QueryType queryType) {
-        this.qtype = queryType;
+        this.qType = queryType;
     }
 
     public boolean isAuth() {
