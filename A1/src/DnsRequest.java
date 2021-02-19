@@ -36,9 +36,7 @@ public class DnsRequest {
         r.put(getRequestHeader());
         r.put(getQuestionHeader(query_name_length));
 
-        System.out.println(r.toString());
         return r.array();
-
     }
 
     /**
@@ -83,13 +81,17 @@ public class DnsRequest {
         // RA  ZZ   RCode -> 0x00
         header.put((byte) 0x00);
         // QD Count 0x0001
-        header.put((byte) 0x0001);
+        byte[] qdBarr = {(byte) 0x00, (byte)0x01};
+        header.put(qdBarr);
         // AN Count 0x0000
-        header.put((byte) 0x0000);
+        byte[] anBarr = {(byte) 0x00, (byte)0x00};
+        header.put(anBarr);
         // NS Count 0x0000
-        header.put((byte) 0x0000);
+        byte[] nsBarr = {(byte) 0x00, (byte)0x00};
+        header.put(nsBarr);
         // AR Count 0x0000
-        header.put((byte) 0x0000);
+        byte[] arBarr = {(byte) 0x00, (byte)0x00};
+        header.put(arBarr);
 
         return header.array();
     }
@@ -111,43 +113,25 @@ public class DnsRequest {
 
         // Based off Primer documentation regarding the question header structure
         // terminate query name will zero-length octet
-        q.put((byte) 0x00);
+        q.put((byte) 0);
 
         // insert query type in question header
         if (qtype == QueryType.A) {
-            q.put((byte) 0x0001);
+            byte[] barr = {(byte) 0x00, (byte) 0x01};
+            q.put(barr);
         } else if (qtype == QueryType.NS) {
-            q.put((byte) 0x0002);
+            byte[] barr = {(byte) 0x00, (byte)0x02};
+            q.put(barr);
         } else if (qtype == QueryType.MX) {
-            q.put((byte) 0x000f);
+            byte[] barr = {(byte) 0x00, (byte)0x0f};
+            q.put(barr);
         }
 
         // for query class, for internet address always use 0x0001
-        q.put((byte) 0x0001);
+        byte[] barr = {(byte) 0x00, (byte)0x01};
+        q.put(barr);
 
         return q.array();
-
-    }
-
-
-    private char hexValueFromQueryType(QueryType qtype) {
-        if (qtype == QueryType.A) {
-            return '1';
-        } else if (qtype == QueryType.NS) {
-            return '2';
-        } else {
-            return 'F';
-        }
-    }
-
-    private static byte[] hexStringToByteArray(String hex_str) {
-        int len = hex_str.length();
-        byte[] data = new byte[len / 2];
-        for (int i = 0; i < len; i += 2) {
-            data[i / 2] = (byte) ((Character.digit(hex_str.charAt(i), 16) << 4)
-                    + Character.digit(hex_str.charAt(i + 1), 16));
-        }
-        return data;
     }
 
 }

@@ -52,6 +52,7 @@ public class DnsClient {
 
         try {
             DatagramSocket clientSocket = new DatagramSocket();
+            clientSocket.setSoTimeout(timeout);
 
             InetAddress ipAddress = InetAddress.getByAddress(server);
 
@@ -65,16 +66,13 @@ public class DnsClient {
             DatagramPacket receivePacket = new DatagramPacket(receiveData, receiveData.length);
 
             long start = System.currentTimeMillis();
-            System.out.println("here1");
             clientSocket.send(clientPacket);
-            System.out.println("here2");
             clientSocket.receive(receivePacket);
-            System.out.println("here3");
             long end = System.currentTimeMillis();
             clientSocket.close();
 
             // Show elapsed time for receiving response
-            System.out.println("Response received after " + (end - start) / 1000. + " seconds " + "[" + (retries - 1) + " retries]");
+            System.out.println("Response received after " + (end - start) / 1000. + " seconds " + "(" + (retries - 1) + " retries)");
 
             DnsResponse res = new DnsResponse(receivePacket.getData(), sendData.length, qtype);
             res.outputResponse();
@@ -120,12 +118,13 @@ public class DnsClient {
                         address = arg.replaceFirst("@", "");
                         String[] tokens = address.split("\\.");
 
+                        int j = 0;
                         for (String token : tokens) {
                             int ipComponent = Integer.parseInt(token);
                             if (ipComponent > 255 || ipComponent < 0) {
                                 throw new Exception("Ip token invalid (not between 0 and 255).");
                             }
-                            server[i] = (byte) ipComponent;
+                            server[j++] = (byte) ipComponent;
                         }
                         name = args[++i];
                     }

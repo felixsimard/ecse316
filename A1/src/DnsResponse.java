@@ -54,7 +54,7 @@ public class DnsResponse {
             return;
         }
 
-        System.out.println("***Answer Section (" + this.ANCount + " answerRecords)***");
+        System.out.println("***Answer Section (" + this.ANCount + " records)***");
 
         for (DnsRecord record : answer_records) {
             record.outputRecord();
@@ -63,7 +63,7 @@ public class DnsResponse {
         System.out.println();
 
         if (this.ARCount > 0) {
-            System.out.println("***Additional Section (" + this.ARCount + " answerRecords)***");
+            System.out.println("***Additional Section (" + this.ARCount + " records)***");
             for (DnsRecord record : additional_records) {
                 record.outputRecord();
             }
