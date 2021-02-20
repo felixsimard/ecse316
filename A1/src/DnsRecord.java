@@ -2,12 +2,12 @@ public class DnsRecord {
 
     private int ttl;
     private int rdLength;
-    private int maxPreference;
+    private int pref;
     private String name;
-    private String domain;
+    private String rData;
     private byte[] qClass;
     private QueryType qType;
-    private boolean auth;
+    private int auth;
     private int byteLength;
 
     /**
@@ -15,7 +15,7 @@ public class DnsRecord {
      *
      * @param auth
      */
-    public DnsRecord(boolean auth) {
+    public DnsRecord(int auth) {
         this.auth = auth;
     }
 
@@ -24,19 +24,19 @@ public class DnsRecord {
      */
     public void outputRecord() {
         String authoritative;
-        if (auth) {
+        if (auth == 1) {
             authoritative = "auth";
         } else {
             authoritative = "nonauth";
         }
         if (qType == QueryType.A) {
-            System.out.println("IP\t" + domain + "\t" + ttl + "\t" + authoritative);
+            System.out.println("IP\t" + rData + "\t" + ttl + "\t" + authoritative);
         } else if (qType == QueryType.NS) {
-            System.out.println("NS\t" + domain + "\t" + ttl + "\t" + authoritative);
+            System.out.println("NS\t" + rData + "\t" + ttl + "\t" + authoritative);
         } else if (qType == QueryType.MX) {
-            System.out.println("MX\t" + domain + "\t" + maxPreference + "\t" + ttl + "\t" + authoritative);
+            System.out.println("MX\t" + rData + "\t" + pref + "\t" + ttl + "\t" + authoritative);
         } else if (qType == QueryType.CNAME) {
-            System.out.println("CNAME\t" + domain + "\t" + ttl + "\t" + authoritative);
+            System.out.println("CNAME\t" + rData + "\t" + ttl + "\t" + authoritative);
         }
     }
 
@@ -66,12 +66,12 @@ public class DnsRecord {
         this.rdLength = rdLength;
     }
 
-    public int getMaxPreference() {
-        return maxPreference;
+    public int getPref() {
+        return pref;
     }
 
-    public void setMaxPreference(int max_preference) {
-        this.maxPreference = max_preference;
+    public void setPref(int pref) {
+        this.pref = pref;
     }
 
     public String getName() {
@@ -82,12 +82,12 @@ public class DnsRecord {
         this.name = name;
     }
 
-    public String getDomain() {
-        return domain;
+    public String getrData() {
+        return rData;
     }
 
-    public void setDomain(String domain) {
-        this.domain = domain;
+    public void setrData(String rData) {
+        this.rData = rData;
     }
 
     public byte[] getQueryClass() {
@@ -106,11 +106,11 @@ public class DnsRecord {
         this.qType = queryType;
     }
 
-    public boolean isAuth() {
+    public int isAuth() {
         return auth;
     }
 
-    public void setAuth(boolean auth) {
+    public void setAuth(int auth) {
         this.auth = auth;
     }
 }

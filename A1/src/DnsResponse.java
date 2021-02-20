@@ -6,7 +6,8 @@ public class DnsResponse {
 
     private byte[] res;
     private byte[] id;
-    private boolean QR, AA, TC, RD, RA;
+    private int AA;
+    private boolean QR, TC, RD, RA;
     private int R_code, QD_count, AN_count, NS_count, AR_count;
     private DnsRecord[] answer_records;
     private DnsRecord[] additional_records;
@@ -23,14 +24,15 @@ public class DnsResponse {
         this.res = res;
         this.qtype = qtype;
 
-        this.validateResponseQuestionType();
-        this.parseHeader();
+        validateResponseQuestionType();
+        parseHeader();
         
         // Fetch all DNS records from response
         answer_records = new DnsRecord[AN_count];
         int offSet = resSize;
         for (int i = 0; i < AN_count; i++) {
-            answer_records[i] = this.parseAnswer(offSet);
+            System.out.println("offset from og: " + offSet);
+            answer_records[i] = parseAnswer(offSet);
             offSet += answer_records[i].getByteLength();
         }
 
@@ -41,19 +43,19 @@ public class DnsResponse {
 
         additional_records = new DnsRecord[AR_count];
         for (int i = 0; i < AR_count; i++) {
-            additional_records[i] = this.parseAnswer(offSet);
+            additional_records[i] = parseAnswer(offSet);
             offSet += additional_records[i].getByteLength();
         }
 
         // Look for possible errors
         try {
-            this.checkRCodeForErrors();
+            checkRCodeForErrors();
         } catch (RuntimeException e) {
             no_records = true;
         }
 
         // Simply checks if QR byte is set to 1
-        this.validateQueryTypeIsResponse();
+        validateQueryTypeIsResponse();
     }
 
     /**
@@ -113,7 +115,7 @@ public class DnsResponse {
         // QR
         this.QR = getBitFromByte(res[2], 7) == 1;
         // AA
-        this.AA = getBitFromByte(res[2], 2) == 1;
+        this.AA = getBitFromByte(res[2], 2);
         // TC
         this.TC = getBitFromByte(res[2], 1) == 1;
         // RD
@@ -194,16 +196,16 @@ public class DnsResponse {
         count_byte += 2;
         switch (result.getQueryType()) {
             case A:
-                result.setDomain(parseAType(rdLength, count_byte));
+                result.setrData(parseAType(rdLength, count_byte));
                 break;
             case NS:
-                result.setDomain(parseNSType(rdLength, count_byte));
+                result.setrData(parseNSType(rdLength, count_byte));
                 break;
             case MX:
-                result.setDomain(parseMXType(rdLength, count_byte, result));
+                result.setrData(parseMXType(rdLength, count_byte, result));
                 break;
             case CNAME:
-                result.setDomain(parseCNAMEType(rdLength, count_byte));
+                result.setrData(parseCNAMEType(rdLength, count_byte));
                 break;
             case OTHER:
                 break;
@@ -235,7 +237,7 @@ public class DnsResponse {
     private String parseMXType(int rdLength, int countByte, DnsRecord record) {
         byte[] mxPreference = {this.res[countByte], this.res[countByte + 1]};
         ByteBuffer buf = ByteBuffer.wrap(mxPreference);
-        record.setMaxPreference(buf.getShort());
+        record.setPref(buf.getShort());
         return getDomainFromIndex(countByte + 2).getDomain();
     }
 

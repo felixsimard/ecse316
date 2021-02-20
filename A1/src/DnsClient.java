@@ -91,6 +91,9 @@ public class DnsClient {
             DnsResponse res = new DnsResponse(receivePacket.getData(), sendData.length, qType);
             res.outputResponse();
 
+            DnsResponse1 res1 = new DnsResponse1(receivePacket.getData(), sendData.length, qType);
+            res1.printResponse();
+
         } catch (SocketException e) {
             System.out.println("ERROR\tFailed to create the socket.");
         } catch (UnknownHostException e) {
