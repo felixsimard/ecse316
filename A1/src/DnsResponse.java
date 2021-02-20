@@ -55,7 +55,7 @@ public class DnsResponse {
 
             this.AnRecords.add(dr);
 
-            answer_offset += rdLength;
+            if (type != QueryType.A) answer_offset += rdLength;
         }
 
         /* ADDITIONAL */
