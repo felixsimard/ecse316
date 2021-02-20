@@ -87,12 +87,8 @@ public class DnsClient {
 
             System.out.println("Response received after " + (end - start) / 1000. + " seconds " + "(" + (retries - 1) + " retries)");
 
-            // output response information
             DnsResponse res = new DnsResponse(receivePacket.getData(), sendData.length, qType);
-            res.outputResponse();
-
-            DnsResponse1 res1 = new DnsResponse1(receivePacket.getData(), sendData.length, qType);
-            res1.printResponse();
+            res.printResponse();
 
         } catch (SocketException e) {
             System.out.println("ERROR\tFailed to create the socket.");
