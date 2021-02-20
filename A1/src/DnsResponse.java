@@ -125,18 +125,18 @@ public class DnsResponse {
 
         int rcode = secondrow[1] & 0x0F;
         if (rcode == 1) {
-            throw new RuntimeException("ERROR\tFormat error in response packet.");
+            throw new RuntimeException("Format error in response packet.");
         } else if (rcode == 2) {
-            throw new RuntimeException("ERROR\tServer failure.");
+            throw new RuntimeException("Server failure.");
         } else if (rcode == 3) {
             if (this.AA == 1) {
                 System.out.println("NOTFOUND");
                 System.exit(1);
             }
         } else if (rcode == 4) {
-            throw new RuntimeException("ERROR\tRequest kind of query not implemented.");
+            throw new RuntimeException("Request kind of query not implemented.");
         } else if (rcode == 5) {
-            throw new RuntimeException("ERROR\tName server refuses to perform operation for policy reasons.");
+            throw new RuntimeException("Name server refuses to perform operation for policy reasons.");
         }
     }
 
@@ -172,7 +172,8 @@ public class DnsResponse {
         } else if (arr[1] == 15) {
             return QueryType.MX;
         } else {
-            throw new RuntimeException("ERROR\tUnknown type in response record.");
+            // return QueryType.OTHER;
+            throw new RuntimeException("Unknown type in response record.");
         }
     }
 
@@ -182,7 +183,7 @@ public class DnsResponse {
         arr[1] = this.dataBuff[answer_offset++];
 
         if (arr[1] != 1) {
-            throw new RuntimeException("ERROR\tClass row not equal to 0x0001");
+            throw new RuntimeException("Class row not equal to 0x0001");
         }
     }
 
