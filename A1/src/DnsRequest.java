@@ -4,9 +4,7 @@ import java.util.Random;
 public class DnsRequest {
 
     private String domain;
-    private QueryType qtype;
-
-
+    private QueryType qType;
     /**
      * Constructor for DNS Request
      *
@@ -15,7 +13,7 @@ public class DnsRequest {
      */
     public DnsRequest(String domain, QueryType qtype) {
         this.domain = domain;
-        this.qtype = qtype;
+        this.qType = qtype;
     }
 
     /**
@@ -30,7 +28,9 @@ public class DnsRequest {
 
         // allocate 12 bytes for header,
         // 5 bytes for question + answers, plus length of query domain
-        ByteBuffer r = ByteBuffer.allocate(query_name_length + 5 + 12);
+        int header_byte_count = 12;
+        int question_byte_count = 5;
+        ByteBuffer r = ByteBuffer.allocate(query_name_length + header_byte_count + question_byte_count);
 
         // build the request, set headers for
         byte[] req_header = getRequestHeader();
@@ -119,13 +119,13 @@ public class DnsRequest {
         q.put((byte) 0);
 
         // insert query type in question header
-        if (qtype == QueryType.A) {
+        if (qType == QueryType.A) {
             byte[] barr = {(byte) 0x00, (byte) 0x01};
             q.put(barr);
-        } else if (qtype == QueryType.NS) {
+        } else if (qType == QueryType.NS) {
             byte[] barr = {(byte) 0x00, (byte)0x02};
             q.put(barr);
-        } else if (qtype == QueryType.MX) {
+        } else if (qType == QueryType.MX) {
             byte[] barr = {(byte) 0x00, (byte)0x0f};
             q.put(barr);
         }

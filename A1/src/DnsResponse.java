@@ -169,9 +169,11 @@ public class DnsResponse {
             return QueryType.A;
         } else if (arr[1] == 2) {
             return QueryType.NS;
+        } else if (arr[1] == 5) {
+            return QueryType.CNAME;
         } else if (arr[1] == 15) {
             return QueryType.MX;
-        } else {
+        }else {
             // return QueryType.OTHER;
             throw new RuntimeException("Unknown type in response record.");
         }
@@ -227,7 +229,7 @@ public class DnsResponse {
                 e.printStackTrace();
             }
 
-        } else if (type == QueryType.NS) {
+        } else if (type == QueryType.NS || type == QueryType.CNAME) {
             result = getString(answer_offset);
         }
         else if (type == QueryType.MX) {
