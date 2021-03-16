@@ -2,3 +2,7 @@
 /A1/out/
 /A1/src/*.class
 /A1/src/Hello.java
+
+A2/.idea/
+A2/venv/
+A2/__pycache__/
