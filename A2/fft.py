@@ -54,11 +54,29 @@ def _dft(arr, k):
 
 
 def DFT(arr):
-    res = np.array([])
+    res = np.zeros(arr.shape, dtype='complex_')
     N = len(arr)
     for k in range(N):
-        res = np.append(res, _dft(arr, k))
+        res[k] = _dft(arr, k)
 
+    return res
+
+
+def DFT_INVERSE(arr):
+    res = np.zeros(arr.shape, dtype='complex_')
+    N = len(arr)
+    for k in range(N):
+        def gen():
+            N = len(arr)
+            for n in range(N):
+                xn = arr[n]
+                coef = np.exp(1j * 2 * pi * k * n / N)
+
+                yield xn * coef
+
+        res[k] = sum(gen())
+
+    res = 1/N * res
     return res
 
 
@@ -117,6 +135,7 @@ def DFT_2D(matrix: np.ndarray):
 
     return res
 
+
 def main():
     args = parseCommandLineArgs()
     print(args)
@@ -126,11 +145,14 @@ def main():
 if __name__ == '__main__':
     main()
 
-    array = np.array([1,2,3,2])
+    array = np.array([1,2,3,2,1])
     print()
-    print('ours: ', FFT(array, 2))
-    print(DFT(array))
-    print('np: ', numpy.fft.fft(array))
+    # print('ours: ', FFT(array, 2))
+    # print(DFT(array))
+    # print('np: ', numpy.fft.fft(array))
+
+    print(DFT_INVERSE(array))
+    print(np.fft.ifft(array))
 
 
     a = np.array([[1,2],[3,4],[5,6]])
