@@ -50,7 +50,7 @@ def _dft(arr, k):
 
             yield xn * coef
 
-    return np.sum(gen())
+    return sum(gen())
 
 
 def DFT(arr):
@@ -88,6 +88,35 @@ def FFT(arr: np.ndarray, threshold):
     return res
 
 
+def DFT_2D(matrix: np.ndarray):
+    assert type(matrix) is np.ndarray
+
+    N, M = matrix.shape
+
+    res = np.zeros(matrix.shape, dtype='complex_')
+    for l in range(N):
+        for k in range(M):
+
+            def inner_gen(row):
+                for m in range(M):
+                    xn = row[m]
+                    coef = np.exp(-1j * 2 * pi * k * m / M)
+
+                    yield xn * coef
+
+            def outer_gen():
+                for n in range(N):
+                    row = matrix[n, :]
+
+                    xn = sum(inner_gen(row))
+                    coef = np.exp(-1j * 2 * pi * l * n / N)
+
+                    yield xn * coef
+
+            res[l, k] = sum(outer_gen())
+
+    return res
+
 def main():
     args = parseCommandLineArgs()
     print(args)
@@ -104,15 +133,6 @@ if __name__ == '__main__':
     print('np: ', numpy.fft.fft(array))
 
 
-    # a = np.array([1,3,5,7])
-    # b = np.array([2,4,6,8])
-    #
-    # l = []
-    # for x, y in zip(a, b):
-    #     l.extend([x,y])
-    # print(l)
-    #
-    # c = [t1 for t1 in zip(a, b)]
-    # print(np.array(c))
-
-    # FFT([1,1,1,2,3,2,4,4,5,1])
+    a = np.array([[1,2],[3,4],[5,6]])
+    print(np.fft.fft2(a))
+    print(DFT_2D(a))
