@@ -136,6 +136,36 @@ def DFT_2D(matrix: np.ndarray):
     return res
 
 
+def DFT_2D_INVERSE(matrix: np.ndarray):
+    assert type(matrix) is np.ndarray
+
+    N, M = matrix.shape
+
+    res = np.zeros(matrix.shape, dtype='complex_')
+    for l in range(N):
+        for k in range(M):
+
+            def inner_gen(row):
+                for m in range(M):
+                    xn = row[m]
+                    coef = np.exp(1j * 2 * pi * k * m / M)
+
+                    yield xn * coef
+
+            def outer_gen():
+                for n in range(N):
+                    row = matrix[n, :]
+
+                    xn = sum(inner_gen(row))
+                    coef = np.exp(1j * 2 * pi * l * n / N)
+
+                    yield xn * coef
+
+            res[l, k] = sum(outer_gen())
+
+    res = 1/(N*M) * res
+    return res
+
 def main():
     args = parseCommandLineArgs()
     print(args)
@@ -156,5 +186,8 @@ if __name__ == '__main__':
 
 
     a = np.array([[1,2],[3,4],[5,6]])
-    print(np.fft.fft2(a))
-    print(DFT_2D(a))
+    # print(np.fft.fft2(a))
+    # print(DFT_2D(a))
+    print()
+    print(DFT_2D_INVERSE(a))
+    print(np.fft.ifft2(a))
