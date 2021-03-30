@@ -14,6 +14,10 @@ from helper import *
 import numpy as np
 import numpy.fft
 from math import pi
+from PIL import Image
+import math
+import timeit
+import time
 
 
 def parseCommandLineArgs():
@@ -80,30 +84,58 @@ def DFT_INVERSE(arr):
     return res
 
 
+def dft(x):
+    x = np.asarray(x, dtype=float)
+    N = x.shape[0]
+    n = np.arange(N)
+    k = n.reshape((N, 1))
+    M = np.exp(-2j * np.pi * k * n / N)
+    return np.dot(M, x)
+
+
 def FFT(arr: np.ndarray, threshold):
     assert type(arr) is np.ndarray
 
     def _fft(_arr, k):
         if len(_arr) < threshold:
-            #print(_dft(_arr, k))
-            return _dft(_arr, k)
+            res = _dft(_arr, k)
+            return res
         else:
             N = len(_arr)
-            ns = set(range(N))
-            evens = set(i for i in ns if i % 2 == 0)
-            odds = ns - evens
-            evens, odds = np.array(list(evens)), np.array(list(odds))
+            Xeven = _fft(_arr[::2], k)
+            Xodd = _fft(_arr[1::2], k)
 
-            Xeven = _fft(_arr[evens], k)
-            Xodd = _fft(_arr[odds], k)
+            exponens = np.exp(-1j*2*pi*np.arange(N)/N)
 
-            return Xeven + np.exp(-1j*2*pi*k/N) * Xodd
+            return np.concatenate([Xeven + exponens[:int(N/2)] * Xodd, Xeven + exponens[int(N/2):] * Xodd])
+            # return Xeven + np.exp(-1j*2*pi*k/N) * Xodd
 
-    res = np.array([])
-    for k in range(len(arr)):
-        res = np.append(res, _fft(arr, k))
+    # res = np.array([])
+    # for k in range(len(arr)):
+    #     res = np.append(res, _fft(arr, k))
 
-    return res
+    return _fft(arr, threshold)
+    # return res
+
+
+def FFT_2D(matrix: np.ndarray):
+    assert type(matrix) is np.ndarray
+
+    res1 = np.zeros(matrix.shape, dtype='complex_')
+
+    print(matrix.shape)
+    for i, row in enumerate(matrix):
+        if i % 100 == 0:
+            print(i)
+        res1[i] = FFT(row, 2)
+
+    res2 = np.zeros(matrix.T.shape, dtype='complex_')
+    for i, col in enumerate(res1.T):
+        if i % 100 == 0:
+            print(i)
+        res2[i] = FFT(col, 2)
+
+    return res2.T
 
 
 def DFT_2D(matrix: np.ndarray):
@@ -171,23 +203,47 @@ def main():
     print(args)
 
 
+def first_mode():
+    with Image.open('./moonlanding.png') as im:
+        data = np.asarray(im)
+
+        a = np.zeros((closestpow2(data.shape[0]), closestpow2(data.shape[1])))
+
+        a[:data.shape[0], :data.shape[1]] = data
+
+        l = np.fft.fft2(a)
+        print(l.shape)
+        print(l)
+        l2 = FFT_2D(a)
+        print(l2.shape)
+        print(l2)
+
+
+def closestpow2(k):
+    return np.power(2, math.ceil(math.log(k, 2)))
+
+
 # MAIN
 if __name__ == '__main__':
-    main()
-
-    array = np.array([1,2,3,2,1])
+    # main()
+    #
+    array = np.random.random(1024)
     print()
-    # print('ours: ', FFT(array, 2))
-    # print(DFT(array))
-    # print('np: ', numpy.fft.fft(array))
+    print('ours: ', FFT(array, 5))
+    # # print(DFT(array))
+    print('np: ', numpy.fft.fft(array))
 
-    print(DFT_INVERSE(array))
-    print(np.fft.ifft(array))
+    print(np.allclose(FFT(array, 5), numpy.fft.fft(array)))
+    #
+    # print(DFT_INVERSE(array))
+    # print(np.fft.ifft(array))
+    #
+    #
+    # a = np.array([[1,2],[3,4],[5,6]])
+    # # print(np.fft.fft2(a))
+    # # print(DFT_2D(a))
+    # print()
+    # print(DFT_2D_INVERSE(a))
+    # print(np.fft.ifft2(a))
 
-
-    a = np.array([[1,2],[3,4],[5,6]])
-    # print(np.fft.fft2(a))
-    # print(DFT_2D(a))
-    print()
-    print(DFT_2D_INVERSE(a))
-    print(np.fft.ifft2(a))
+    # first_mode()
