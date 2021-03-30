@@ -18,6 +18,7 @@ from PIL import Image
 import math
 import timeit
 import time
+import matplotlib.pyplot as plt
 
 
 def parseCommandLineArgs():
@@ -80,7 +81,7 @@ def DFT_INVERSE(arr):
 
         res[k] = sum(gen())
 
-    res = 1/N * res
+    res = 1 / N * res
     return res
 
 
@@ -105,9 +106,9 @@ def FFT(arr: np.ndarray, threshold):
             Xeven = _fft(_arr[::2], k)
             Xodd = _fft(_arr[1::2], k)
 
-            exponens = np.exp(-1j*2*pi*np.arange(N)/N)
+            exponens = np.exp(-1j * 2 * pi * np.arange(N) / N)
 
-            return np.concatenate([Xeven + exponens[:int(N/2)] * Xodd, Xeven + exponens[int(N/2):] * Xodd])
+            return np.concatenate([Xeven + exponens[:int(N / 2)] * Xodd, Xeven + exponens[int(N / 2):] * Xodd])
             # return Xeven + np.exp(-1j*2*pi*k/N) * Xodd
 
     # res = np.array([])
@@ -118,6 +119,7 @@ def FFT(arr: np.ndarray, threshold):
     # return res
 
 
+# https://towardsdatascience.com/fast-fourier-transform-937926e591cb
 def FFT_2D(matrix: np.ndarray):
     assert type(matrix) is np.ndarray
 
@@ -195,16 +197,30 @@ def DFT_2D_INVERSE(matrix: np.ndarray):
 
             res[l, k] = sum(outer_gen())
 
-    res = 1/(N*M) * res
+    res = 1 / (N * M) * res
     return res
+
 
 def main():
     args = parseCommandLineArgs()
-    print(args)
+    mode = args['mode']
+    filename = args['image']
+
+    if mode == 1:
+        first_mode(filename)
+    elif mode == 2:
+        second_mode()
+    elif mode == 3:
+        third_mode()
+    else:
+        fourth_mode()
+
+    return
 
 
-def first_mode():
-    with Image.open('./moonlanding.png') as im:
+def first_mode(img):
+    print("Mode 1")
+    with Image.open('./'+img+'') as im:
         data = np.asarray(im)
 
         a = np.zeros((closestpow2(data.shape[0]), closestpow2(data.shape[1])))
@@ -218,9 +234,24 @@ def first_mode():
         print(l2.shape)
         print(l2)
 
+        # # Compute the 2D-FFT on the image
+        # fft_2d = FFT_2D(a)
+        #
+        # fig, ax = plt.subplots(nrows=1, ncols=2)
+        # ax[0][0] = plt.imshow(fft_2d, interpolation='none')
+        # plt.show()
 
-def closestpow2(k):
-    return np.power(2, math.ceil(math.log(k, 2)))
+
+def second_mode():
+    print("Mode 2")
+
+
+def third_mode():
+    print("Mode 3")
+
+
+def fourth_mode():
+    print("Mode 4")
 
 
 # MAIN
