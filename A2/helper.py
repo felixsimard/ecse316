@@ -10,6 +10,7 @@ Group 40
 """
 
 import math
+
 import numpy as np
 
 
@@ -19,3 +20,4 @@ def errorMsg(msg):
 
 def closestpow2(k):
     return np.power(2, math.ceil(math.log(k, 2)))
+

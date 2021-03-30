@@ -19,6 +19,7 @@ import math
 import timeit
 import time
 import matplotlib.pyplot as plt
+from matplotlib.colors import LogNorm
 
 
 def parseCommandLineArgs():
@@ -227,19 +228,25 @@ def first_mode(img):
 
         a[:data.shape[0], :data.shape[1]] = data
 
-        l = np.fft.fft2(a)
-        print(l.shape)
-        print(l)
-        l2 = FFT_2D(a)
-        print(l2.shape)
-        print(l2)
+        # l = np.fft.fft2(a)
+        # print(l.shape)
+        # print(l)
+        # l2 = FFT_2D(a)
+        # print(l2.shape)
+        # print(l2)
 
-        # # Compute the 2D-FFT on the image
-        # fft_2d = FFT_2D(a)
-        #
-        # fig, ax = plt.subplots(nrows=1, ncols=2)
-        # ax[0][0] = plt.imshow(fft_2d, interpolation='none')
-        # plt.show()
+        # Compute the 2D-FFT on the image
+        fft_2d = FFT_2D(a)
+        fft_2d_img = abs(fft_2d)
+
+        fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(10,5))
+
+        ax[0].imshow(data, norm=LogNorm(), cmap=plt.cm.Greys,
+                        interpolation='none')
+        ax[1].imshow(fft_2d_img, norm=LogNorm(), cmap=plt.cm.Greys,
+                        interpolation='none')
+
+        plt.show()
 
 
 def second_mode():
@@ -256,25 +263,25 @@ def fourth_mode():
 
 # MAIN
 if __name__ == '__main__':
-    # main()
-    #
-    array = np.random.random(1024)
-    print()
-    print('ours: ', FFT(array, 5))
-    # # print(DFT(array))
-    print('np: ', numpy.fft.fft(array))
-
-    print(np.allclose(FFT(array, 5), numpy.fft.fft(array)))
-    #
-    # print(DFT_INVERSE(array))
-    # print(np.fft.ifft(array))
-    #
-    #
-    # a = np.array([[1,2],[3,4],[5,6]])
-    # # print(np.fft.fft2(a))
-    # # print(DFT_2D(a))
+    main()
+    # #
+    # array = np.random.random(1024)
     # print()
-    # print(DFT_2D_INVERSE(a))
-    # print(np.fft.ifft2(a))
-
-    # first_mode()
+    # print('ours: ', FFT(array, 5))
+    # # # print(DFT(array))
+    # print('np: ', numpy.fft.fft(array))
+    #
+    # print(np.allclose(FFT(array, 5), numpy.fft.fft(array)))
+    # #
+    # # print(DFT_INVERSE(array))
+    # # print(np.fft.ifft(array))
+    # #
+    # #
+    # # a = np.array([[1,2],[3,4],[5,6]])
+    # # # print(np.fft.fft2(a))
+    # # # print(DFT_2D(a))
+    # # print()
+    # # print(DFT_2D_INVERSE(a))
+    # # print(np.fft.ifft2(a))
+    #
+    # # first_mode()
