@@ -20,6 +20,9 @@ import timeit
 import time
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
+import pandas as pd
+
+DEBUG = False
 
 
 def parseCommandLineArgs():
@@ -126,16 +129,19 @@ def FFT_2D(matrix: np.ndarray):
 
     res1 = np.zeros(matrix.shape, dtype='complex_')
 
-    print(matrix.shape)
+    print("Computing FFT 2D...")
+
     for i, row in enumerate(matrix):
-        if i % 100 == 0:
-            print(i)
+        if DEBUG:
+            if i % 100 == 0:
+                print(i)
         res1[i] = FFT(row, 2)
 
     res2 = np.zeros(matrix.T.shape, dtype='complex_')
     for i, col in enumerate(res1.T):
-        if i % 100 == 0:
-            print(i)
+        if DEBUG:
+            if i % 100 == 0:
+                print(i)
         res2[i] = FFT(col, 2)
 
     return res2.T
@@ -210,9 +216,9 @@ def main():
     if mode == 1:
         first_mode(filename)
     elif mode == 2:
-        second_mode()
+        second_mode(filename)
     elif mode == 3:
-        third_mode()
+        third_mode(filename)
     else:
         fourth_mode()
 
@@ -221,44 +227,180 @@ def main():
 
 def first_mode(img):
     print("Mode 1")
-    with Image.open('./'+img+'') as im:
+    with Image.open('./' + img + '') as im:
+        # convert image file to matrix
         data = np.asarray(im)
 
-        a = np.zeros((closestpow2(data.shape[0]), closestpow2(data.shape[1])))
+        # initialize a matrix which has sizes proportional to powers of 2 for FFT to work
+        data_padded = np.zeros((closestpow2(data.shape[0]), closestpow2(data.shape[1])))
 
-        a[:data.shape[0], :data.shape[1]] = data
-
-        # l = np.fft.fft2(a)
-        # print(l.shape)
-        # print(l)
-        # l2 = FFT_2D(a)
-        # print(l2.shape)
-        # print(l2)
+        # copy over the matrix data to our padded matrix
+        data_padded[:data.shape[0], :data.shape[1]] = data
 
         # Compute the 2D-FFT on the image
-        fft_2d = FFT_2D(a)
+        fft_2d = FFT_2D(data_padded)
+        # For plotting purposes, take the real values of the matrix to eliminate complex values
         fft_2d_img = abs(fft_2d)
 
-        fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(10,5))
-
+        # Plotting
+        print("Plotting...")
+        fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(10, 5))
         ax[0].imshow(data, norm=LogNorm(), cmap=plt.cm.Greys,
-                        interpolation='none')
+                     interpolation='none')
         ax[1].imshow(fft_2d_img, norm=LogNorm(), cmap=plt.cm.Greys,
-                        interpolation='none')
+                     interpolation='none')
+        plt.show()
+
+        return
+
+
+def remove_high_frequencies(matrix, remove=0.1):
+    if remove > 0:
+        # Define % of highest values to set to 0
+        denoise_percent = remove;
+        # Total number of entries
+        total_size = matrix.size
+        # Flatten our matrix
+        matrix_flat = matrix.flatten()
+        # Get indices of largest N values
+        n = round(denoise_percent * total_size)
+        indices = np.argpartition(matrix_flat, -n)[-n:]
+        indices = indices[np.argsort(-matrix_flat[indices])]
+        # Unravel indices
+        high_frequencies = np.unravel_index(indices, matrix.shape)
+        # Set high frequencies to 0
+        matrix[high_frequencies] = 0
+
+        # Print fraction of non-zero entries
+        print("--------------")
+        print("Non-zero entries:", total_size - len(indices))
+        print("Fraction of non-zero entries:", round((total_size - len(indices)) / total_size, 2))
+        print("--------------")
+
+    else:
+        # Print fraction of non-zero entries
+        print("--------------")
+        print("Non-zero entries:", matrix.size)
+        print("Fraction of non-zero entries:", 1.0)
+        print("--------------")
+
+    return matrix
+
+
+def second_mode(img):
+    print("Mode 2")
+    with Image.open('./' + img + '') as im:
+        # convert image file to matrix
+        data = np.asarray(im)
+
+        # initialize a matrix which has sizes proportional to powers of 2 for FFT to work
+        data_padded = np.zeros((closestpow2(data.shape[0]), closestpow2(data.shape[1])))
+
+        # copy over the matrix data to our padded matrix
+        data_padded[:data.shape[0], :data.shape[1]] = data
+
+        # Compute the 2D-FFT on the image
+        fft_2d = FFT_2D(data_padded)
+
+        # Remove fraction of high frequencies
+        fft_2d = remove_high_frequencies(matrix=fft_2d, remove=0.1)
+
+        # Retain the real part of our
+        fft_2d_img_inversed = np.fft.ifft2(fft_2d).real
+        # fft_2d_img_inversed = DFT_2D_INVERSE(fft_2d_img).real
+
+        # Plotting
+        print("Plotting...")
+        fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(10, 5))
+        ax[0].imshow(data, norm=LogNorm(), cmap=plt.cm.Greys,
+                     interpolation='none')
+        ax[1].imshow(fft_2d_img_inversed, norm=LogNorm(), cmap=plt.cm.Greys,
+                     interpolation='none')
+        plt.show()
+
+        return
+
+
+def third_mode(img):
+    print("Mode 3")
+    # Define our levels of compression to use
+    compression_levels = [0, 0.2, 0.4, 0.65, 0.8, 0.95]
+    with Image.open('./' + img + '') as im:
+        # convert image file to matrix
+        data = np.asarray(im)
+
+        # initialize a matrix which has sizes proportional to powers of 2 for FFT to work
+        data_padded = np.zeros((closestpow2(data.shape[0]), closestpow2(data.shape[1])))
+
+        # copy over the matrix data to our padded matrix
+        data_padded[:data.shape[0], :data.shape[1]] = data
+
+        # Compute the 2D-FFT on the image
+        fft_2d = FFT_2D(data_padded)
+
+        # Plotting
+        print("Plotting...")
+        fig, ax = plt.subplots(nrows=2, ncols=3, figsize=(10, 5))
+
+        print(ax[1])
+
+        for i, lvl in enumerate(compression_levels):
+            print("Compression %d percent" % (lvl * 100))
+            fft_2d_compressed = remove_high_frequencies(matrix=fft_2d, remove=lvl)
+
+            # Retain the real part of our
+            fft_2d_compressed_inversed = np.fft.ifft2(fft_2d_compressed).real
+            # fft_2d_compressed_inversed = DFT_2D_INVERSE(fft_2d_compressed).real
+
+            # Save the matrix to a CSV
+            csv_filename = "csv/compress_" + str(int(lvl * 100)) + ".csv"
+            csv_file = open(csv_filename, "w")
+            pd.DataFrame(fft_2d_compressed_inversed).to_csv(csv_file)
+
+            if i in [0, 1, 2]:  # first row
+                ax[0][i].imshow(fft_2d_compressed_inversed, norm=LogNorm(), cmap=plt.cm.Greys,
+                                interpolation='none')
+            else:  # second row
+                ax[1][i - 3].imshow(fft_2d_compressed_inversed, norm=LogNorm(), cmap=plt.cm.Greys,
+                                    interpolation='none')
 
         plt.show()
 
-
-def second_mode():
-    print("Mode 2")
-
-
-def third_mode():
-    print("Mode 3")
+        return
 
 
 def fourth_mode():
     print("Mode 4")
+    sizes = [math.pow(2, 5), math.pow(2, 6), math.pow(2, 7), math.pow(2, 8), math.pow(2, 9), math.pow(2, 10)]
+    runs = 4  # number of times to run our function for each input size
+    stats = {}
+    for i, size in enumerate(sizes):
+        print("------------")
+        print("Size:", size)
+
+        # find the closest factors for the desired size of our matrix (as square as possible)
+        r, c = closest_factors(size)
+        # create a matrix of random integer values
+        arr_rand = np.random.randint(0, 999999, size=(r, c), dtype='int')
+        print(arr_rand)
+
+        runtimes = np.zeros(runs)
+        for i in range(runs):
+            print("-",i)
+            start = time.time()
+            fft_2d = FFT_2D(arr_rand)
+            end = time.time()
+            elapsed = end - start
+            np.append(runtimes, elapsed)
+            print(runtimes)
+
+        stats[str(size)] = {'var': np.var(runtimes), 'sd': np.std(runtimes)}
+
+    print(stats)
+
+    # Plot the statistics
+
+    # ...
 
 
 # MAIN
