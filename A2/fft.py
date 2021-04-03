@@ -161,7 +161,7 @@ def DFT_2D_INVERSE(matrix: np.ndarray):
 
 def main():
     args = parseCommandLineArgs()
-    mode = args['mode']
+    mode = 3  # args['mode']
     filename = args['image']
 
     if mode == 1:
@@ -208,7 +208,7 @@ def first_mode(img):
 def remove_high_frequencies(matrix, remove=0.1):
     if remove > 0:
         # Define % of highest values to set to 0
-        denoise_percent = remove;
+        denoise_percent = remove
         # Total number of entries
         total_size = matrix.size
         # Flatten our matrix
@@ -236,6 +236,8 @@ def remove_high_frequencies(matrix, remove=0.1):
         print("--------------")
 
     return matrix
+
+
 
 
 def second_mode(img):
@@ -291,7 +293,7 @@ def third_mode(img):
         data_padded[:data.shape[0], :data.shape[1]] = data
 
         # Compute the 2D-FFT on the image
-        fft_2d = FFT_2D(data_padded)
+        fft_2d = FFT_2D(data_padded, 16)
 
         # Plotting
         print("Plotting...")
@@ -354,7 +356,7 @@ def fourth_mode():
             elapsed = end - start
 
             start2 = time.time()
-            np.fft.fft2(arr_rand)
+            DFT_2D(arr_rand)
             end2 = time.time()
             elapsed2 = end2 - start2
 
@@ -399,8 +401,11 @@ def fourth_mode():
     df_compare = pd.DataFrame(data=data, columns=columns)
     print(df_compare)
 
-    df_compare.plot(x='size', y=['fast_mean', 'naive_mean'], yerr=['fast_2std', 'naive_2std'], kind='line')
+    #df_compare.plot(x='size', y=['fast_mean', 'naive_mean'], # yerr=['fast_2std', 'naive_2std'],
+    #                kind='line')
 
+    plt.errorbar(x=df_compare['size'], y=df_compare['fast_mean'], yerr=df_compare['fast_2std'])
+    plt.errorbar(x=df_compare['size'], y=df_compare['naive_mean'], yerr=df_compare['naive_2std'])
     plt.show()
 
 # MAIN
