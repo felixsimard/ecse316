@@ -161,7 +161,7 @@ def DFT_2D_INVERSE(matrix: np.ndarray):
 
 def main():
     args = parseCommandLineArgs()
-    mode = 4  # args['mode']
+    mode = args['mode']
     filename = args['image']
 
     if mode == 1:
@@ -225,7 +225,7 @@ def remove_high_frequencies(matrix, remove=0.1):
         # Print fraction of non-zero entries
         print("--------------")
         print("Non-zero entries:", total_size - len(indices))
-        print("Fraction of non-zero entries:", round((total_size - len(indices)) / total_size, 2))
+        print("Fraction of non-zero entries:", ((total_size - len(indices)) / total_size))
         print("--------------")
 
     else:
@@ -256,12 +256,8 @@ def second_mode(img):
         # Remove fraction of high frequencies
         fft_2d = remove_high_frequencies(matrix=fft_2d, remove=0.0001)
 
-        # Retain the real part of our
-        print(data.shape)
-
         fft_2d_img_inversed = np.fft.ifft2(fft_2d).real
         fft_2d_img_inversed = fft_2d_img_inversed[:data.shape[0], :data.shape[1]]
-        print(fft_2d_img_inversed.shape)
         # fft_2d_img_inversed = DFT_2D_INVERSE(fft_2d_img).real
 
         # Plotting
@@ -409,7 +405,7 @@ def fourth_mode():
 
 # MAIN
 if __name__ == '__main__':
-    # main()
+    main()
     # array = np.random.random((1024, 1024))
     # start1 = time.time()
     # ours = _DFT_2D(array)
@@ -427,12 +423,14 @@ if __name__ == '__main__':
     # print('t2:', t2)
     # print('t3:', t3)
     # print(np.allclose(ours, theirs, past))
-    array = np.random.random((1024, 1024))
-    ours = FFT_2D(array, 16)
-    theirs = np.array(np.fft.fft2(array))
-    print('ours', ours, ours.shape)
-    print('theirs', theirs, theirs.shape)
-    print(np.allclose(ours, theirs))
+
+    # array = np.random.random((1024, 1024))
+    # ours = FFT_2D(array, 16)
+    # theirs = np.array(np.fft.fft2(array))
+    # print('ours', ours, ours.shape)
+    # print('theirs', theirs, theirs.shape)
+    # print(np.allclose(ours, theirs))
+
     # print()
     # print('ours: ', FFT(array, 5))
     # # # print(DFT(array))
