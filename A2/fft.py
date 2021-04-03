@@ -161,7 +161,7 @@ def DFT_2D_INVERSE(matrix: np.ndarray):
 
 def main():
     args = parseCommandLineArgs()
-    mode = args['mode']
+    mode = 3  # args['mode']
     filename = args['image']
 
     if mode == 1:
@@ -209,7 +209,7 @@ def first_mode(img):
 def remove_high_frequencies(matrix, remove=0.1):
     if remove > 0:
         # Define % of highest values to set to 0
-        denoise_percent = remove;
+        denoise_percent = remove
         # Total number of entries
         total_size = matrix.size
         # Flatten our matrix
@@ -317,11 +317,11 @@ def third_mode(img):
             print("Size of sparse matrix (%d x %d): %f" % (r, c, sys.getsizeof(fft_2d_compressed)))
 
             if i in [0, 1, 2]:  # first row
-                ax[0][i].imshow(fft_2d_compressed_inversed, # norm=LogNorm(),
+                ax[0][i].imshow(fft_2d_compressed_inversed,  # norm=LogNorm(),
                                 cmap='gray',
                                 interpolation='none')
             else:  # second row
-                ax[1][i - 3].imshow(fft_2d_compressed_inversed, # norm=LogNorm(),
+                ax[1][i - 3].imshow(fft_2d_compressed_inversed,  # norm=LogNorm(),
                                     cmap='gray',
                                     interpolation='none')
 
@@ -357,7 +357,7 @@ def fourth_mode():
             elapsed = end - start
 
             start2 = time.time()
-            np.fft.fft2(arr_rand)
+            DFT_2D(arr_rand)
             end2 = time.time()
             elapsed2 = end2 - start2
 
@@ -369,7 +369,6 @@ def fourth_mode():
         mean_stats[size] = np.mean(runtimes)
         var_stats[size] = np.var(runtimes)
         std_stats[size] = np.std(runtimes)
-
 
     # Plot the statistics
     # df_mean = pd.DataFrame.from_dict(mean_stats, orient='index')
@@ -397,14 +396,19 @@ def fourth_mode():
     df_std.plot(x='size', y='std', kind='line')
 
     columns = ['size', 'fast_mean', 'fast_2std', 'naive_mean', 'naive_2std']
-    data = np.column_stack([list(mean_stats.keys()), list(mean_stats.values()), [2*s for s in std_stats.values()],
-                            list(naive_stats.values()), [2*s for s in naive_std.values()]])
+    data = np.column_stack([list(mean_stats.keys()), list(mean_stats.values()), [2 * s for s in std_stats.values()],
+                            list(naive_stats.values()), [2 * s for s in naive_std.values()]])
     df_compare = pd.DataFrame(data=data, columns=columns)
     print(df_compare)
 
     # df_compare.plot(x='size', y=['fast_mean', 'naive_mean'], yerr=['fast_2std', 'naive_2std'], kind='line')
+    # df_compare.plot(x='size', y=['fast_mean', 'naive_mean'], # yerr=['fast_2std', 'naive_2std'],
+    #                kind='line')
 
+    plt.errorbar(x=df_compare['size'], y=df_compare['fast_mean'], yerr=df_compare['fast_2std'])
+    plt.errorbar(x=df_compare['size'], y=df_compare['naive_mean'], yerr=df_compare['naive_2std'])
     plt.show()
+
 
 # MAIN
 if __name__ == '__main__':
