@@ -50,81 +50,44 @@ def parseCommandLineArgs():
     return args
 
 
-def _dft(arr, k):
-    def gen():
-        N = len(arr)
-        for n in range(N):
-            xn = arr[n]
-            coef = np.exp(-1j * 2 * pi * k * n / N)
-
-            yield xn * coef
-
-    return sum(gen())
-
-
 def DFT(arr):
-    res = np.zeros(arr.shape, dtype='complex_')
-    N = len(arr)
-    for k in range(N):
-        res[k] = _dft(arr, k)
+    assert type(arr) is np.ndarray
 
-    return res
+    if len(arr.shape) == 1:
+        arr = np.array([arr])
 
+    _, N = arr.shape
 
-def DFT_INVERSE(arr):
-    res = np.zeros(arr.shape, dtype='complex_')
-    N = len(arr)
-    for k in range(N):
-        def gen():
-            N = len(arr)
-            for n in range(N):
-                xn = arr[n]
-                coef = np.exp(1j * 2 * pi * k * n / N)
+    ks = np.array([np.arange(N)])
 
-                yield xn * coef
+    n = np.array([np.arange(N)])
+    kn = np.matmul(ks.T, n)
 
-        res[k] = sum(gen())
+    first_exponens = np.exp(-1j * 2 * pi * kn / N)
 
-    res = 1 / N * res
-    return res
+    a = np.matmul(arr, first_exponens.T)
 
-
-def dft(x):
-    x = np.asarray(x, dtype=float)
-    N = x.shape[0]
-    n = np.arange(N)
-    k = n.reshape((N, 1))
-    M = np.exp(-2j * np.pi * k * n / N)
-    return np.dot(M, x)
+    return a
 
 
 def FFT(arr: np.ndarray, threshold):
     assert type(arr) is np.ndarray
 
-    def _fft(_arr, k):
-        if len(_arr) < threshold:
-            res = _dft(_arr, k)
-            return res
-        else:
-            N = len(_arr)
-            Xeven = _fft(_arr[::2], k)
-            Xodd = _fft(_arr[1::2], k)
+    if len(arr) <= threshold:
+        res = DFT(arr)
+        return res
+    else:
+        N = len(arr)
+        Xeven = FFT(arr[::2], threshold)
+        Xodd = FFT(arr[1::2], threshold)
 
-            exponens = np.exp(-1j * 2 * pi * np.arange(N) / N)
+        exponens = np.exp(-1j * 2 * pi * np.arange(N) / N)
 
-            return np.concatenate([Xeven + exponens[:int(N / 2)] * Xodd, Xeven + exponens[int(N / 2):] * Xodd])
-            # return Xeven + np.exp(-1j*2*pi*k/N) * Xodd
-
-    # res = np.array([])
-    # for k in range(len(arr)):
-    #     res = np.append(res, _fft(arr, k))
-
-    return _fft(arr, threshold)
-    # return res
+        return np.concatenate([Xeven + exponens[:int(N / 2)] * Xodd, Xeven + exponens[int(N / 2):] * Xodd], axis=1)
 
 
 # https://towardsdatascience.com/fast-fourier-transform-937926e591cb
-def FFT_2D(matrix: np.ndarray):
+def FFT_2D(matrix: np.ndarray, threshold):
     assert type(matrix) is np.ndarray
 
     res1 = np.zeros(matrix.shape, dtype='complex_')
@@ -135,46 +98,40 @@ def FFT_2D(matrix: np.ndarray):
         if DEBUG:
             if i % 100 == 0:
                 print(i)
-        res1[i] = FFT(row, 2)
+        res1[i] = FFT(row, threshold)
 
     res2 = np.zeros(matrix.T.shape, dtype='complex_')
     for i, col in enumerate(res1.T):
         if DEBUG:
             if i % 100 == 0:
                 print(i)
-        res2[i] = FFT(col, 2)
+        res2[i] = FFT(col, threshold)
 
     return res2.T
 
 
 def DFT_2D(matrix: np.ndarray):
     assert type(matrix) is np.ndarray
-
     N, M = matrix.shape
 
-    res = np.zeros(matrix.shape, dtype='complex_')
-    for l in range(N):
-        for k in range(M):
+    ks = np.array([np.arange(M)])
+    ls = np.array([np.arange(N)])
 
-            def inner_gen(row):
-                for m in range(M):
-                    xn = row[m]
-                    coef = np.exp(-1j * 2 * pi * k * m / M)
+    m = np.array([np.arange(M)])
+    km = np.matmul(ks.T, m)
 
-                    yield xn * coef
+    n = np.array([np.arange(M)])
+    ln = np.matmul(ls.T, n)
 
-            def outer_gen():
-                for n in range(N):
-                    row = matrix[n, :]
+    first_exponens = np.exp(-1j * 2 * pi * km / M)
 
-                    xn = sum(inner_gen(row))
-                    coef = np.exp(-1j * 2 * pi * l * n / N)
+    second_exponens = np.exp(-1j * 2 * pi * ln / N)
 
-                    yield xn * coef
+    a = np.matmul(matrix.T, first_exponens.T).T
 
-            res[l, k] = sum(outer_gen())
+    c = np.matmul(a, second_exponens.T)
 
-    return res
+    return c
 
 
 def DFT_2D_INVERSE(matrix: np.ndarray):
@@ -182,35 +139,29 @@ def DFT_2D_INVERSE(matrix: np.ndarray):
 
     N, M = matrix.shape
 
-    res = np.zeros(matrix.shape, dtype='complex_')
-    for l in range(N):
-        for k in range(M):
+    ks = np.array([np.arange(M)])
+    ls = np.array([np.arange(N)])
 
-            def inner_gen(row):
-                for m in range(M):
-                    xn = row[m]
-                    coef = np.exp(1j * 2 * pi * k * m / M)
+    m = np.array([np.arange(M)])
+    km = np.matmul(ks.T, m)
 
-                    yield xn * coef
+    n = np.array([np.arange(M)])
+    ln = np.matmul(ls.T, n)
 
-            def outer_gen():
-                for n in range(N):
-                    row = matrix[n, :]
+    first_exponens = np.exp(1j * 2 * pi * km / M)
 
-                    xn = sum(inner_gen(row))
-                    coef = np.exp(1j * 2 * pi * l * n / N)
+    second_exponens = np.exp(1j * 2 * pi * ln / N)
 
-                    yield xn * coef
+    a = np.matmul(matrix.T, first_exponens.T).T
 
-            res[l, k] = sum(outer_gen())
+    c = np.matmul(a, second_exponens.T)
 
-    res = 1 / (N * M) * res
-    return res
+    return (1 / (N * M)) * c
 
 
 def main():
     args = parseCommandLineArgs()
-    mode = args['mode']
+    mode = 4  # args['mode']
     filename = args['image']
 
     if mode == 1:
@@ -238,7 +189,7 @@ def first_mode(img):
         data_padded[:data.shape[0], :data.shape[1]] = data
 
         # Compute the 2D-FFT on the image
-        fft_2d = FFT_2D(data_padded)
+        fft_2d = FFT_2D(data_padded, 16)
         # For plotting purposes, take the real values of the matrix to eliminate complex values
         fft_2d_img = abs(fft_2d)
 
@@ -300,22 +251,30 @@ def second_mode(img):
         data_padded[:data.shape[0], :data.shape[1]] = data
 
         # Compute the 2D-FFT on the image
-        fft_2d = FFT_2D(data_padded)
+        fft_2d = np.fft.fft2(data_padded)  # FFT_2D(data_padded)
 
         # Remove fraction of high frequencies
-        fft_2d = remove_high_frequencies(matrix=fft_2d, remove=0.1)
+        fft_2d = remove_high_frequencies(matrix=fft_2d, remove=0.0001)
 
         # Retain the real part of our
+        print(data.shape)
+
         fft_2d_img_inversed = np.fft.ifft2(fft_2d).real
+        fft_2d_img_inversed = fft_2d_img_inversed[:data.shape[0], :data.shape[1]]
+        print(fft_2d_img_inversed.shape)
         # fft_2d_img_inversed = DFT_2D_INVERSE(fft_2d_img).real
 
         # Plotting
         print("Plotting...")
+
         fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(10, 5))
-        ax[0].imshow(data, norm=LogNorm(), cmap=plt.cm.Greys,
+        ax[0].imshow(data,  # norm=LogNorm(),
+                     cmap='gray',
                      interpolation='none')
-        ax[1].imshow(fft_2d_img_inversed, norm=LogNorm(), cmap=plt.cm.Greys,
+        ax[1].imshow(fft_2d_img_inversed,  # norm=LogNorm(),
+                     cmap='gray',
                      interpolation='none')
+
         plt.show()
 
         return
@@ -350,6 +309,7 @@ def third_mode(img):
 
             # Retain the real part of our
             fft_2d_compressed_inversed = np.fft.ifft2(fft_2d_compressed).real
+            fft_2d_compressed_inversed = fft_2d_compressed_inversed[:data.shape[0], :data.shape[1]]
             # fft_2d_compressed_inversed = DFT_2D_INVERSE(fft_2d_compressed).real
 
             # Save the matrix to a CSV
@@ -358,10 +318,12 @@ def third_mode(img):
             pd.DataFrame(fft_2d_compressed_inversed).to_csv(csv_file)
 
             if i in [0, 1, 2]:  # first row
-                ax[0][i].imshow(fft_2d_compressed_inversed, norm=LogNorm(), cmap=plt.cm.Greys,
+                ax[0][i].imshow(fft_2d_compressed_inversed, # norm=LogNorm(),
+                                cmap='gray',
                                 interpolation='none')
             else:  # second row
-                ax[1][i - 3].imshow(fft_2d_compressed_inversed, norm=LogNorm(), cmap=plt.cm.Greys,
+                ax[1][i - 3].imshow(fft_2d_compressed_inversed, # norm=LogNorm(),
+                                    cmap='gray',
                                     interpolation='none')
 
         plt.show()
@@ -372,42 +334,105 @@ def third_mode(img):
 def fourth_mode():
     print("Mode 4")
     sizes = [math.pow(2, 5), math.pow(2, 6), math.pow(2, 7), math.pow(2, 8), math.pow(2, 9), math.pow(2, 10)]
-    runs = 4  # number of times to run our function for each input size
-    stats = {}
-    for i, size in enumerate(sizes):
+    runs = 10  # number of times to run our function for each input size
+    naive_stats = {}
+    naive_std = {}
+    mean_stats = {}
+    var_stats = {}
+    std_stats = {}
+    for i, size in enumerate([int(s) for s in sizes]):
         print("------------")
         print("Size:", size)
 
         # find the closest factors for the desired size of our matrix (as square as possible)
-        r, c = closest_factors(size)
+        # r, c = closest_factors(size)
         # create a matrix of random integer values
-        arr_rand = np.random.randint(0, 999999, size=(r, c), dtype='int')
-        print(arr_rand)
+        arr_rand = np.random.randint(0, 999999, size=(size, size), dtype='int')
 
         runtimes = np.zeros(runs)
+        naive_runtimes = np.zeros(runs)
         for i in range(runs):
-            print("-",i)
             start = time.time()
-            fft_2d = FFT_2D(arr_rand)
+            fft_2d = np.fft.fft2(arr_rand)
             end = time.time()
             elapsed = end - start
-            np.append(runtimes, elapsed)
-            print(runtimes)
 
-        stats[str(size)] = {'var': np.var(runtimes), 'sd': np.std(runtimes)}
+            start2 = time.time()
+            np.fft.fft2(arr_rand)
+            end2 = time.time()
+            elapsed2 = end2 - start2
 
-    print(stats)
+            runtimes = np.append(runtimes, elapsed)
+            naive_runtimes = np.append(naive_runtimes, elapsed2)
+
+        naive_stats[size] = np.mean(naive_runtimes)
+        naive_std[size] = np.std(naive_runtimes)
+        mean_stats[size] = np.mean(runtimes)
+        var_stats[size] = np.var(runtimes)
+        std_stats[size] = np.std(runtimes)
+
 
     # Plot the statistics
+    # df_mean = pd.DataFrame.from_dict(mean_stats, orient='index')
+    # create mean dataframe
+    columns = ['size', 'mean']
+    data = np.column_stack([list(mean_stats.keys()), list(mean_stats.values())])
+    df_mean = pd.DataFrame(data=data, columns=columns)
+    print(df_mean)
+
+    # create variance dataframe
+    columns = ['size', 'var']
+    data = np.column_stack([list(var_stats.keys()), list(var_stats.values())])
+    df_var = pd.DataFrame(data=data, columns=columns)
+    print(df_var)
+
+    # create standard deviation dataframe
+    columns = ['size', 'std']
+    data = np.column_stack([list(std_stats.keys()), list(std_stats.values())])
+    df_std = pd.DataFrame(data=data, columns=columns)
+    print(df_std)
 
     # ...
+    df_mean.plot(x='size', y='mean', kind='line')
+    #df_var.plot(x='size', y='var', kind='line')
+    #df_std.plot(x='size', y='std', kind='line')
 
+    columns = ['size', 'fast_mean', 'fast_2std', 'naive_mean', 'naive_2std']
+    data = np.column_stack([list(mean_stats.keys()), list(mean_stats.values()), [2*s for s in std_stats.values()],
+                            list(naive_stats.values()), [2*s for s in naive_std.values()]])
+    df_compare = pd.DataFrame(data=data, columns=columns)
+    print(df_compare)
+
+    df_compare.plot(x='size', y=['fast_mean', 'naive_mean'], yerr=['fast_2std', 'naive_2std'], kind='line')
+
+    plt.show()
 
 # MAIN
 if __name__ == '__main__':
-    main()
-    # #
-    # array = np.random.random(1024)
+    # main()
+    # array = np.random.random((1024, 1024))
+    # start1 = time.time()
+    # ours = _DFT_2D(array)
+    # t1 = time.time() - start1
+    #
+    # start2 = time.time()
+    # theirs = np.fft.fft2(array)
+    # t2 = time.time() - start2
+    #
+    # start3 = time.time()
+    # past = FFT_2D(array, 16)
+    # t3 = time.time() - start3
+    #
+    # print('t1:', t1)
+    # print('t2:', t2)
+    # print('t3:', t3)
+    # print(np.allclose(ours, theirs, past))
+    array = np.random.random((1024, 1024))
+    ours = FFT_2D(array, 16)
+    theirs = np.array(np.fft.fft2(array))
+    print('ours', ours, ours.shape)
+    print('theirs', theirs, theirs.shape)
+    print(np.allclose(ours, theirs))
     # print()
     # print('ours: ', FFT(array, 5))
     # # # print(DFT(array))
