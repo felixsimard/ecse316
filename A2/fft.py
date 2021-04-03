@@ -238,7 +238,21 @@ def remove_high_frequencies(matrix, remove=0.1):
     return matrix
 
 
+def remove_middle_freq(matrix: np.ndarray, percentile):
+    total_size = matrix.size
+    num_idx = percentile * total_size
 
+    matrix_flat = matrix.flatten()
+    argsorted = np.argsort(matrix_flat)
+
+    middle = argsorted.size // 2
+
+    middle_idx_flat = argsorted[-int(middle - num_idx / 2):int(middle + num_idx)]
+    middle_idx = np.unravel_index(middle_idx_flat, matrix.shape)
+
+    matrix[middle_idx] = 0
+
+    return matrix
 
 def second_mode(img):
     print("Mode 2")
@@ -303,7 +317,8 @@ def third_mode(img):
 
         for i, lvl in enumerate(compression_levels):
             print("Compression %d percent" % (lvl * 100))
-            fft_2d_compressed = remove_high_frequencies(matrix=fft_2d, remove=lvl)
+            # fft_2d_compressed = remove_high_frequencies(matrix=fft_2d, remove=lvl)
+            fft_2d_compressed = remove_middle_freq(matrix=fft_2d, percentile=lvl)
 
             # Retain the real part of our
             fft_2d_compressed_inversed = np.fft.ifft2(fft_2d_compressed).real
