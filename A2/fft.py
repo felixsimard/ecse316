@@ -16,7 +16,6 @@ import numpy.fft
 from math import pi
 from PIL import Image
 import math
-import timeit
 import time
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
@@ -86,7 +85,6 @@ def FFT(arr: np.ndarray, threshold):
         return np.concatenate([Xeven + exponens[:int(N / 2)] * Xodd, Xeven + exponens[int(N / 2):] * Xodd], axis=1)
 
 
-# https://towardsdatascience.com/fast-fourier-transform-937926e591cb
 def FFT_2D(matrix: np.ndarray, threshold):
     assert type(matrix) is np.ndarray
 
@@ -161,7 +159,7 @@ def DFT_2D_INVERSE(matrix: np.ndarray):
 
 def main():
     args = parseCommandLineArgs()
-    mode = 4 # args['mode']
+    mode = 4  # args['mode']
     filename = args['image']
 
     if mode == 1:
@@ -255,6 +253,7 @@ def remove_middle_freq(matrix: np.ndarray, percentile):
 
     return matrix
 
+
 def second_mode(img):
     print("Mode 2")
     with Image.open('./' + img + '') as im:
@@ -273,9 +272,8 @@ def second_mode(img):
         # Remove fraction of high frequencies
         fft_2d = remove_high_frequencies(matrix=fft_2d, remove=0.001)
 
-        fft_2d_img_inversed = np.fft.ifft2(fft_2d).real
+        fft_2d_img_inversed = DFT_2D_INVERSE(fft_2d).real
         fft_2d_img_inversed = fft_2d_img_inversed[:data.shape[0], :data.shape[1]]
-        # fft_2d_img_inversed = DFT_2D_INVERSE(fft_2d_img).real
 
         # Plotting
         print("Plotting...")
@@ -296,7 +294,7 @@ def second_mode(img):
 def third_mode(img):
     print("Mode 3")
     # Define our levels of compression to use
-    compression_levels = [0, 0.2, 0.4, 0.65, 0.8, 0.95]
+    compression_levels = [0, 0.1, 0.2, 0.4, 0.65, 0.95]
     with Image.open('./' + img + '') as im:
         # convert image file to matrix
         data = np.asarray(im)
@@ -314,24 +312,24 @@ def third_mode(img):
         print("Plotting...")
         fig, ax = plt.subplots(nrows=2, ncols=3, figsize=(10, 5))
 
-        print(ax[1])
-
         for i, lvl in enumerate(compression_levels):
+
             print("Compression %d percent" % (lvl * 100))
             # fft_2d_compressed = remove_high_frequencies(matrix=fft_2d, remove=lvl)
             fft_2d_compressed = remove_middle_freq(matrix=fft_2d, percentile=lvl)
 
             # Retain the real part of our
-            fft_2d_compressed_inversed = np.fft.ifft2(fft_2d_compressed).real
+            # fft_2d_compressed_inversed = np.fft.ifft2(fft_2d_compressed).real
+            fft_2d_compressed_inversed = DFT_2D_INVERSE(fft_2d_compressed).real
             fft_2d_compressed_inversed = fft_2d_compressed_inversed[:data.shape[0], :data.shape[1]]
-            # fft_2d_compressed_inversed = DFT_2D_INVERSE(fft_2d_compressed).real
 
             # Save the matrix to a CSV
             csv_filename = "csv/compress_" + str(int(lvl * 100)) + ".csv"
             csv_file = open(csv_filename, "w")
-            pd.DataFrame(fft_2d_compressed).to_csv(csv_file)
+            fft_nonzero_entries = fft_2d_compressed[fft_2d_compressed.nonzero()]
+            pd.DataFrame(fft_nonzero_entries).to_csv(csv_file)
             r, c = fft_2d_compressed_inversed.shape
-            print("Size of sparse matrix (%d x %d): %f" % (r, c, sys.getsizeof(fft_2d_compressed)))
+            print("Size of sparse matrix (%d x %d): %f" % (r, c, sys.getsizeof(fft_nonzero_entries)))
 
             if i in [0, 1, 2]:  # first row
                 ax[0][i].imshow(fft_2d_compressed_inversed,  # norm=LogNorm(),
@@ -360,8 +358,6 @@ def fourth_mode():
         print("------------")
         print("Size:", size)
 
-        # find the closest factors for the desired size of our matrix (as square as possible)
-        # r, c = closest_factors(size)
         # create a matrix of random integer values
         arr_rand = np.random.randint(0, 999999, size=(size, size), dtype='int')
 
@@ -369,8 +365,7 @@ def fourth_mode():
         naive_runtimes = np.zeros(runs)
         for i in range(runs):
             start = time.time()
-            np.fft.fft2(arr_rand)
-            # FFT_2D(arr_rand, 16)
+            FFT_2D(arr_rand, 16)
             end = time.time()
             elapsed = end - start
 
@@ -389,7 +384,7 @@ def fourth_mode():
         std_stats[size] = np.std(runtimes)
 
     # Plot the statistics
-    # df_mean = pd.DataFrame.from_dict(mean_stats, orient='index')
+
     # create mean dataframe
     columns = ['size', 'mean']
     data = np.column_stack([list(mean_stats.keys()), list(mean_stats.values())])
@@ -409,9 +404,9 @@ def fourth_mode():
     print(df_std)
 
     # ...
-    # df_mean.plot(x='size', y='mean', kind='line')
-    # df_var.plot(x='size', y='var', kind='line')
-    # df_std.plot(x='size', y='std', kind='line')
+    df_mean.plot(x='size', y='mean', kind='line')
+    df_var.plot(x='size', y='var', kind='line')
+    df_std.plot(x='size', y='std', kind='line')
 
     columns = ['size', 'fast_mean', 'fast_2std', 'naive_mean', 'naive_2std']
     data = np.column_stack([list(mean_stats.keys()), list(mean_stats.values()), [2 * s for s in std_stats.values()],
@@ -423,8 +418,9 @@ def fourth_mode():
     # df_compare.plot(x='size', y=['fast_mean', 'naive_mean'], # yerr=['fast_2std', 'naive_2std'],
     #                kind='line')
 
-    plt.errorbar(x=df_compare['size'], y=df_compare['fast_mean'], yerr=df_compare['fast_2std'])
-    plt.errorbar(x=df_compare['size'], y=df_compare['naive_mean'], yerr=df_compare['naive_2std'])
+    # plt.errorbar(x=df_compare['size'], y=df_compare['fast_mean'], yerr=df_compare['fast_2std'])
+    # plt.errorbar(x=df_compare['size'], y=df_compare['naive_mean'], yerr=df_compare['naive_2std'])
+
     plt.show()
 
 
