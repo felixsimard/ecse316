@@ -190,6 +190,7 @@ def first_mode(img):
 
         # Compute the 2D-FFT on the image
         fft_2d = FFT_2D(data_padded, 16)
+
         # For plotting purposes, take the real values of the matrix to eliminate complex values
         fft_2d_img = abs(fft_2d)
 
@@ -254,7 +255,7 @@ def second_mode(img):
         fft_2d = np.fft.fft2(data_padded)  # FFT_2D(data_padded)
 
         # Remove fraction of high frequencies
-        fft_2d = remove_high_frequencies(matrix=fft_2d, remove=0.0001)
+        fft_2d = remove_high_frequencies(matrix=fft_2d, remove=0.001)
 
         fft_2d_img_inversed = np.fft.ifft2(fft_2d).real
         fft_2d_img_inversed = fft_2d_img_inversed[:data.shape[0], :data.shape[1]]
@@ -291,7 +292,7 @@ def third_mode(img):
         data_padded[:data.shape[0], :data.shape[1]] = data
 
         # Compute the 2D-FFT on the image
-        fft_2d = FFT_2D(data_padded)
+        fft_2d = FFT_2D(data_padded, 16)
 
         # Plotting
         print("Plotting...")
@@ -311,7 +312,9 @@ def third_mode(img):
             # Save the matrix to a CSV
             csv_filename = "csv/compress_" + str(int(lvl * 100)) + ".csv"
             csv_file = open(csv_filename, "w")
-            pd.DataFrame(fft_2d_compressed_inversed).to_csv(csv_file)
+            pd.DataFrame(fft_2d_compressed).to_csv(csv_file)
+            r, c = fft_2d_compressed_inversed.shape
+            print("Size of sparse matrix (%d x %d): %f" % (r, c, sys.getsizeof(fft_2d_compressed)))
 
             if i in [0, 1, 2]:  # first row
                 ax[0][i].imshow(fft_2d_compressed_inversed, # norm=LogNorm(),
@@ -390,8 +393,8 @@ def fourth_mode():
 
     # ...
     df_mean.plot(x='size', y='mean', kind='line')
-    #df_var.plot(x='size', y='var', kind='line')
-    #df_std.plot(x='size', y='std', kind='line')
+    df_var.plot(x='size', y='var', kind='line')
+    df_std.plot(x='size', y='std', kind='line')
 
     columns = ['size', 'fast_mean', 'fast_2std', 'naive_mean', 'naive_2std']
     data = np.column_stack([list(mean_stats.keys()), list(mean_stats.values()), [2*s for s in std_stats.values()],
@@ -399,7 +402,7 @@ def fourth_mode():
     df_compare = pd.DataFrame(data=data, columns=columns)
     print(df_compare)
 
-    df_compare.plot(x='size', y=['fast_mean', 'naive_mean'], yerr=['fast_2std', 'naive_2std'], kind='line')
+    # df_compare.plot(x='size', y=['fast_mean', 'naive_mean'], yerr=['fast_2std', 'naive_2std'], kind='line')
 
     plt.show()
 
