@@ -161,7 +161,7 @@ def DFT_2D_INVERSE(matrix: np.ndarray):
 
 def main():
     args = parseCommandLineArgs()
-    mode = 3  # args['mode']
+    mode = 4 # args['mode']
     filename = args['image']
 
     if mode == 1:
@@ -352,7 +352,8 @@ def fourth_mode():
         naive_runtimes = np.zeros(runs)
         for i in range(runs):
             start = time.time()
-            fft_2d = np.fft.fft2(arr_rand)
+            np.fft.fft2(arr_rand)
+            # FFT_2D(arr_rand, 16)
             end = time.time()
             elapsed = end - start
 
@@ -391,9 +392,9 @@ def fourth_mode():
     print(df_std)
 
     # ...
-    df_mean.plot(x='size', y='mean', kind='line')
-    df_var.plot(x='size', y='var', kind='line')
-    df_std.plot(x='size', y='std', kind='line')
+    # df_mean.plot(x='size', y='mean', kind='line')
+    # df_var.plot(x='size', y='var', kind='line')
+    # df_std.plot(x='size', y='std', kind='line')
 
     columns = ['size', 'fast_mean', 'fast_2std', 'naive_mean', 'naive_2std']
     data = np.column_stack([list(mean_stats.keys()), list(mean_stats.values()), [2 * s for s in std_stats.values()],
