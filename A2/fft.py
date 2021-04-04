@@ -90,8 +90,6 @@ def FFT_2D(matrix: np.ndarray, threshold):
 
     res1 = np.zeros(matrix.shape, dtype='complex_')
 
-    print("Computing FFT 2D...")
-
     for i, row in enumerate(matrix):
         if DEBUG:
             if i % 100 == 0:
@@ -150,16 +148,16 @@ def DFT_2D_INVERSE(matrix: np.ndarray):
 
     second_exponens = np.exp(1j * 2 * pi * ln / N)
 
-    a = np.matmul(matrix.T, first_exponens.T).T
+    a = np.matmul(matrix, first_exponens).T
 
-    c = np.matmul(a, second_exponens.T)
+    c = np.matmul(a, second_exponens).T
 
     return (1 / (N * M)) * c
 
 
 def main():
     args = parseCommandLineArgs()
-    mode = 4  # args['mode']
+    mode = args['mode']
     filename = args['image']
 
     if mode == 1:
@@ -206,18 +204,24 @@ def first_mode(img):
 
 def remove_high_frequencies(matrix, remove=0.1):
     if remove > 0:
+
         # Define % of highest values to set to 0
         denoise_percent = remove
+
         # Total number of entries
         total_size = matrix.size
+
         # Flatten our matrix
         matrix_flat = matrix.flatten()
+
         # Get indices of largest N values
         n = round(denoise_percent * total_size)
         indices = np.argpartition(matrix_flat, -n)[-n:]
         indices = indices[np.argsort(-matrix_flat[indices])]
+
         # Unravel indices
         high_frequencies = np.unravel_index(indices, matrix.shape)
+
         # Set high frequencies to 0
         matrix[high_frequencies] = 0
 
@@ -267,10 +271,10 @@ def second_mode(img):
         data_padded[:data.shape[0], :data.shape[1]] = data
 
         # Compute the 2D-FFT on the image
-        fft_2d = np.fft.fft2(data_padded)  # FFT_2D(data_padded)
+        fft_2d = FFT_2D(data_padded, 16)  # FFT_2D(data_padded)
 
         # Remove fraction of high frequencies
-        fft_2d = remove_high_frequencies(matrix=fft_2d, remove=0.001)
+        fft_2d = remove_high_frequencies(matrix=fft_2d, remove=0.0001)
 
         fft_2d_img_inversed = DFT_2D_INVERSE(fft_2d).real
         fft_2d_img_inversed = fft_2d_img_inversed[:data.shape[0], :data.shape[1]]
@@ -293,9 +297,12 @@ def second_mode(img):
 
 def third_mode(img):
     print("Mode 3")
+
     # Define our levels of compression to use
     compression_levels = [0, 0.1, 0.2, 0.4, 0.65, 0.95]
+
     with Image.open('./' + img + '') as im:
+
         # convert image file to matrix
         data = np.asarray(im)
 
@@ -315,11 +322,12 @@ def third_mode(img):
         for i, lvl in enumerate(compression_levels):
 
             print("Compression %d percent" % (lvl * 100))
+
             # fft_2d_compressed = remove_high_frequencies(matrix=fft_2d, remove=lvl)
             fft_2d_compressed = remove_middle_freq(matrix=fft_2d, percentile=lvl)
 
             # Retain the real part of our
-            # fft_2d_compressed_inversed = np.fft.ifft2(fft_2d_compressed).real
+
             fft_2d_compressed_inversed = DFT_2D_INVERSE(fft_2d_compressed).real
             fft_2d_compressed_inversed = fft_2d_compressed_inversed[:data.shape[0], :data.shape[1]]
 
@@ -349,12 +357,14 @@ def fourth_mode():
     print("Mode 4")
     sizes = [math.pow(2, 5), math.pow(2, 6), math.pow(2, 7), math.pow(2, 8), math.pow(2, 9), math.pow(2, 10)]
     runs = 10  # number of times to run our function for each input size
+
     naive_stats = {}
     naive_std = {}
     mean_stats = {}
     var_stats = {}
     std_stats = {}
-    for i, size in enumerate([int(s) for s in sizes]):
+
+    for i, size in enumerate([int(s) for s in sizes]): # iterate over all matrix sizes
         print("------------")
         print("Size:", size)
 
@@ -384,6 +394,7 @@ def fourth_mode():
         std_stats[size] = np.std(runtimes)
 
     # Plot the statistics
+    print("Output metrics for runtimes of FFT 2D algorithm:")
 
     # create mean dataframe
     columns = ['size', 'mean']
@@ -403,11 +414,12 @@ def fourth_mode():
     df_std = pd.DataFrame(data=data, columns=columns)
     print(df_std)
 
-    # ...
+    # Plot metrics
     df_mean.plot(x='size', y='mean', kind='line')
     df_var.plot(x='size', y='var', kind='line')
     df_std.plot(x='size', y='std', kind='line')
 
+    # Plot for comparing the naive 2D dFT with 2D FFT
     columns = ['size', 'fast_mean', 'fast_2std', 'naive_mean', 'naive_2std']
     data = np.column_stack([list(mean_stats.keys()), list(mean_stats.values()), [2 * s for s in std_stats.values()],
                             list(naive_stats.values()), [2 * s for s in naive_std.values()]])
@@ -469,5 +481,4 @@ if __name__ == '__main__':
     # # print()
     # # print(DFT_2D_INVERSE(a))
     # # print(np.fft.ifft2(a))
-    #
-    # # first_mode()
+
